@@ -1,11 +1,17 @@
 (function() {
-  var app, injector;
+  var app;
 
   app = angular.module("shoof.ui", []);
 
-  app.controller("UiCtrl", ["ContextService", "$scope", function(ContextService, $scope) {}]);
+  app.controller("ShoofCtrl", [
+    "ContextManagerService", "DataRetrieverService", "$scope", "$log", function(ContextManagerService, DataRetrieverService, $scope, $log) {
+      return $scope.dataFor = function(containerOrigin) {
+        return DataRetrieverService.retrieveOrLoadDataStructureFor(ctn);
+      };
+    }
+  ]);
 
-  app.service("ContextService", [
+  app.service("ContextManagerService", [
     function() {
       var service;
       service = {};
@@ -16,53 +22,22 @@
     }
   ]);
 
-  app.service("TopNewsDataBinder", [
-    "$window", function($window) {
-      var containers, origins, service;
-      containers = $window.reply.containers;
-      origins = $window.reply.origins;
-      service = {};
-      service.load = function(containerType) {};
-      return service;
-    }
-  ]);
-
-  app.service("DefaultDataAdapter", [
-    function() {
-      var service;
-      service = {};
-      service.adapt = function(items) {
-        return data;
+  app.service("DataRetrieverService", [
+    "$log", function($log) {
+      var service, _containers;
+      service = _containers = {};
+      service.setInPageContainers = function(containers) {
+        $log.debug("Going to set containers " + containers);
+        return this._containers = containers;
+      };
+      service.retrieveOrLoadDataStructureFor = function(containerOrigin) {
+        return this._containers[containerOrigin];
       };
       return service;
     }
   ]);
 
-  app.directive("wlContainer", [
-    "$compile", "$injector", function($compile, $injector) {
-      return {
-        restrict: "E",
-        scope: {
-          type: "=",
-          dataBinder: "=",
-          dataAdapter: "=",
-          dataRenderer: "="
-        },
-        link: function(scope, element, attrs) {
-          var adapter, binder, template;
-          binder = $injector.get(scope.dataBinder);
-          adapter = $injector.get(scope.dataAdapter);
-          scope.items = binder.loadData(scope.type);
-          adapter.adapt(items);
-          template = "<div><div ng-repeat=\"item in items\"><wl-" + scope.renderer + " item=\"item\"></wl-" + scope.renderer + "></div></div>";
-          element.html(template).show();
-          $compile(element.contents())(scope);
-        }
-      };
-    }
-  ]);
-
-  app.directive("wlNewsRenderer", [
+  app.directive("wlNews", [
     "$compile", "$injector", function($compile, $injector) {
       return {
         restrict: "E",
@@ -74,7 +49,39 @@
     }
   ]);
 
-  injector = angular.bootstrap(document, ["shoof.ui"]);
+  app.directive("wlContainer", [
+    "DataRetrieverService", "$compile", "$log", function(DataRetrieverService, $compile, $log) {
+      return {
+        restrict: "E",
+        scope: {
+          ctn: '@',
+          uri: '@'
+        },
+        link: function(scope, element, attrs) {
+          var template;
+          scope.container = DataRetrieverService.retrieveOrLoadDataStructureFor(scope.uri);
+          scope.notify = function() {
+            return $log.debug("Click on element");
+          };
+          template = "<div class=\"row\">\n<p>Current container uri <small>{{container.origin}}</small></p>  \n<div ng-repeat=\"item in container.items\">\n  <wl-" + container.skin + " item=\"item\" ng-click=\"notify()\"></wl-" + container.skin + "\">\n</div>\n</div>";
+          element.html(template).show();
+          $compile(element.contents())(scope);
+        }
+      };
+    }
+  ]);
+
+  window.containers = {};
+
+  $(document).ready(function() {
+    var injector;
+    injector = angular.bootstrap(document, ["shoof.ui"]);
+    return injector.invoke([
+      'EditorService', function(EditorService) {
+        return DataRetrieverService.setInPageContainers(window.containers);
+      }
+    ]);
+  });
 
 }).call(this);
 

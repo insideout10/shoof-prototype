@@ -2,14 +2,18 @@
 app = angular.module("shoof.ui", [])
 
 # UiCtrl manage communications between renderers and services
-app.controller "UiCtrl", [
-  "ContextService"
+app.controller "ShoofCtrl", [
+  "ContextManagerService"
+  "DataRetrieverService"
   "$scope"
-  (ContextService, $scope) ->
+  "$log"
+  (ContextManagerService, DataRetrieverService, $scope, $log) ->
+    $scope.dataFor = (containerOrigin) ->
+      DataRetrieverService.retrieveOrLoadDataStructureFor(ctn)
 ]
 
 # Represents the Context
-app.service "ContextService", [->
+app.service "ContextManagerService", [->
   service = {}
   service.foo = ->
     console.log "I am the context"
@@ -17,58 +21,27 @@ app.service "ContextService", [->
 
   service
 ]
-app.service "TopNewsDataBinder", [
-  "$window"
-  ($window) ->
-    containers = $window.reply.containers
-    origins = $window.reply.origins
-    service = {}
-    service.load = (containerType) ->
+app.service "DataRetrieverService", [
+  "$log"
+  ($log) ->
+    
+    service =
+      _containers = {} 
+    service.setInPageContainers = (containers) ->
+      $log.debug "Going to set containers #{containers}"
+      @_containers = containers
 
+    service.retrieveOrLoadDataStructureFor = (containerOrigin) ->
+      @_containers[containerOrigin]
     
     # loop containers and find container with type = containerType
     # find origins uri for that container
     # retrieve related data objs and return them
-    return service
-]
-app.service "DefaultDataAdapter", [->
-  service = {}
-  service.adapt = (items) ->
-    
-    # loops data
-    # Apply data manipulation if nedeed
-    data
-
-  service
+    service
 ]
 
 # Generic container directive
-app.directive "wlContainer", [
-  "$compile"
-  "$injector"
-  ($compile, $injector) ->
-    return (
-      restrict: "E"
-      scope:
-        type: "="
-        dataBinder: "="
-        dataAdapter: "="
-        dataRenderer: "="
-
-      link: (scope, element, attrs) ->
-        binder = $injector.get(scope.dataBinder)
-        adapter = $injector.get(scope.dataAdapter)
-        scope.items = binder.loadData(scope.type)
-        adapter.adapt items
-        template = "<div><div ng-repeat=\"item in items\"><wl-" + scope.renderer + " item=\"item\"></wl-" + scope.renderer + "></div></div>"
-        element.html(template).show()
-        $compile(element.contents()) scope
-        return
-    )
-]
-
-# Generic container directive
-app.directive "wlNewsRenderer", [
+app.directive "wlNews", [
   "$compile"
   "$injector"
   ($compile, $injector) ->
@@ -76,8 +49,49 @@ app.directive "wlNewsRenderer", [
       restrict: "E"
       scope:
         item: "="
-
       template: "<div>{{item.title}}</div>"
     )
 ]
-injector = angular.bootstrap(document, ["shoof.ui"])
+
+# Generic container directive
+app.directive "wlContainer", [
+  "DataRetrieverService"
+  "$compile"
+  "$log"
+  (DataRetrieverService, $compile, $log) ->
+    return (
+      restrict: "E"
+      scope:
+        ctn: '@'
+        uri: '@'
+
+      link: (scope, element, attrs) ->
+        # Load container
+        scope.container = DataRetrieverService.retrieveOrLoadDataStructureFor(scope.uri)
+        
+        scope.notify = ()->
+          $log.debug "Click on element"
+        
+        template = """
+          <div class="row">
+          <p>Current container uri <small>{{container.origin}}</small></p>  
+          <div ng-repeat="item in container.items">
+            <wl-#{container.skin} item="item" ng-click="notify()"></wl-#{container.skin}">
+          </div>
+          </div>"""
+
+        element.html(template).show()
+        $compile(element.contents()) scope
+        return
+    )
+]
+
+window.containers = {}
+
+$( document ).ready ()->
+  injector = angular.bootstrap(document, ["shoof.ui"])
+  injector.invoke(['EditorService', (EditorService) ->
+    DataRetrieverService.setInPageContainers window.containers
+  ])
+
+
