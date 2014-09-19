@@ -39,7 +39,7 @@ module.exports = function(grunt) {
     			tasks: 'coffee'
   			},
   			cssmin: {
-  				files: ['app/css/app.shoof.ui.css'],
+  				files: ['app/css/shoof.ui.css'],
   				tasks: ['cssmin']
 			}
 		}
