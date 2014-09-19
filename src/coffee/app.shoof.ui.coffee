@@ -25,8 +25,8 @@ app.service "DataRetrieverService", [
   "$log"
   ($log) ->
     
-    service =
-      _containers = {} 
+    service = 
+      _containers: {} 
     service.setInPageContainers = (containers) ->
       $log.debug "Going to set containers #{containers}"
       @_containers = containers
@@ -68,7 +68,7 @@ app.directive "wlContainer", [
       link: (scope, element, attrs) ->
         # Load container
         scope.container = DataRetrieverService.retrieveOrLoadDataStructureFor(scope.uri)
-        
+        $log.debug scope.uri
         scope.notify = ()->
           $log.debug "Click on element"
         

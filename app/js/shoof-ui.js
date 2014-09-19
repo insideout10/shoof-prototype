@@ -24,8 +24,10 @@
 
   app.service("DataRetrieverService", [
     "$log", function($log) {
-      var service, _containers;
-      service = _containers = {};
+      var service;
+      service = {
+        _containers: {}
+      };
       service.setInPageContainers = function(containers) {
         $log.debug("Going to set containers " + containers);
         return this._containers = containers;
@@ -60,6 +62,7 @@
         link: function(scope, element, attrs) {
           var template;
           scope.container = DataRetrieverService.retrieveOrLoadDataStructureFor(scope.uri);
+          $log.debug(scope.uri);
           scope.notify = function() {
             return $log.debug("Click on element");
           };
