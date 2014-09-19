@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "shoof-ui.js",
+  "sourceRoot": "../../src/coffee/",
+  "sources": [
+    "app.shoof.ui.coffee"
+  ],
+  "names": [],
+  "mappings": "AAAA;AAAA;AAAA"
+}
