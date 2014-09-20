@@ -248,17 +248,21 @@ app.directive "wlNews", [
 app.directive "wlVideo", [
   "$compile"
   "$injector"
-  ($compile, $injector) ->
+  "$sce"
+  ($compile, $injector, $sce) ->
     return (
       restrict: "E"
       scope:
         items: "="
+      link: (scope, element, attrs) ->
+        scope.trustSrc = (src) ->
+          $sce.trustAsResourceUrl(src)
       template: """
         <ul ng-repeat="item in items">
           <li>
             <div>{{item.title}}</div>
             <div class="flex-video">
-              {{item.content}}
+               <iframe width="300" height="250" ng-src="{{trustSrc(item.meta.videoURL)}}" frameborder="0" allowfullscreen></iframe>
             </div>
           </li>
         </ul>
