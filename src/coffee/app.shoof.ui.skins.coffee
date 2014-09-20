@@ -1,16 +1,23 @@
 # Sample skin directive for news
 app.directive "wlNews", [
-  "$compile"
-  "$injector"
-  ($compile, $injector) ->
+  "$log"
+  ($log) ->
     return (
       restrict: "E"
       scope:
         items: "="
+      link: (scope, element, attrs) ->
+        scope.notify = (item) ->
+          $log.debug "Clicked on video #{item.id}"
+          scope.$emit "contextChanged", "contentId", item.id
       template: """
-        <ul>
+        <ul class="small-block-grid-2 large-block-grid-2">
           <li ng-repeat="item in items">
-            <div>{{item.title}}</div>
+            <img ng-src="{{item.meta.thumb}}" ng-mouseover="notify(item)" />
+            <h5>{{item.title}}</h5>
+            <p>
+            {{item.content}}<br />[ <a ng-href="{{item.content}}">More Info</a> ]
+            </p>
           </li>
         </ul>
       """
@@ -22,7 +29,8 @@ app.directive "wlVideo", [
   "$compile"
   "$injector"
   "$sce"
-  ($compile, $injector, $sce) ->
+  "$log"
+  ($compile, $injector, $sce, $log) ->
     return (
       restrict: "E"
       scope:
@@ -30,6 +38,9 @@ app.directive "wlVideo", [
       link: (scope, element, attrs) ->
         scope.trustSrc = (src) ->
           $sce.trustAsResourceUrl(src)
+        scope.notify = (item) ->
+          $log.debug "Clicked on video #{item.id}"
+          scope.$emit "contextChanged", "contentId", item.id
       template: """
         <div ng-repeat="item in items">
             <h3>{{item.title}}</h3>

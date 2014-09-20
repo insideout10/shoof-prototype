@@ -7,14 +7,17 @@
   app.controller("ShoofCtrl", [
     "ContextManagerService", "DataRetrieverService", "$scope", "$rootScope", "$log", function(ContextManagerService, DataRetrieverService, $scope, $rootScope, $log) {
       $scope.stack = {};
+      $scope.observers = {};
       $scope.context = ContextManagerService.getContext();
       $rootScope.$on("contextChanged", function(event, property, value) {
         if (ContextManagerService.addProperty(property, value)) {
-          return ContextManagerService.rewriteStack($scope.stack);
+          return ContextManagerService.rewriteStack($scope.stack, $scope.observers);
         }
       });
-      $rootScope.$on("containerAdded", function(event, ctnOrigin) {
-        return $scope.stack[ctnOrigin] = ctnOrigin;
+      $rootScope.$on("containerAdded", function(event, ctnOrigin, ctnObserver) {
+        $log.debug("Added ctn " + ctnOrigin + " reactive to " + ctnObserver);
+        $scope.stack[ctnOrigin] = ctnOrigin;
+        return $scope.observers[ctnOrigin] = ctnObserver;
       });
       $rootScope.$on("containerLoaded", function(event, ctnOrigin) {
         $log.debug("Notified about ctn " + ctnOrigin + " loading");
@@ -43,7 +46,7 @@
       var service;
       service = {
         _context: {},
-        _allowedProperties: ['foo', 'userId']
+        _allowedProperties: ['contentId', 'userId']
       };
       service.getContext = function() {
         return this._context;
@@ -56,27 +59,30 @@
         this._context[property] = value;
         return true;
       };
-      service.toString = function() {
-        var out, property, _i, _len, _ref;
-        out = "---";
+      service.toString = function(observers) {
+        var chunks, property, _i, _len, _ref;
+        chunks = [];
         _ref = this._allowedProperties;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           property = _ref[_i];
-          if (this._context[property]) {
-            out += "" + property + "=" + this._context[property];
+          if (this._context[property] && (__indexOf.call(observers, property) >= 0)) {
+            chunks.push("" + property + "=" + this._context[property]);
           }
         }
-        out += ".json";
-        return out;
+        if (chunks.length > 0) {
+          return "---" + (chunks.join('')) + ".json";
+        } else {
+          return ".json";
+        }
       };
-      service.rewriteOrigin = function(origin) {
-        return origin.replace(".json", this.toString());
+      service.rewriteOrigin = function(origin, observers) {
+        return origin.replace(".json", this.toString(observers));
       };
-      service.rewriteStack = function(stack) {
+      service.rewriteStack = function(stack, observers) {
         var id, origin;
         for (id in stack) {
           origin = stack[id];
-          stack[id] = this.rewriteOrigin(id);
+          stack[id] = this.rewriteOrigin(id, observers[id]);
         }
         return stack;
       };
@@ -136,11 +142,16 @@
         restrict: "E",
         scope: {
           uri: '@',
-          stack: '='
+          stack: '=',
+          observe: '@'
         },
         link: function(scope, element, attrs) {
-          var redraw;
-          scope.$emit("containerAdded", scope.uri);
+          var observers, redraw;
+          observers = [];
+          if (scope.observe) {
+            observers = scope.observe.split(',');
+          }
+          scope.$emit("containerAdded", scope.uri, observers);
           redraw = function(currentOrigin) {
             var template;
             $log.debug("Going to redraw ctn " + scope.uri);
@@ -150,7 +161,7 @@
             $compile(element.contents())(scope);
             return true;
           };
-          scope.$watchCollection('stack', function(newStack, oldStack) {
+          return scope.$watchCollection('stack', function(newStack, oldStack) {
             var currentOrigin;
             currentOrigin = newStack[scope.uri];
             $log.debug("Updating container " + scope.uri + " with content from " + currentOrigin);
@@ -174,9 +185,6 @@
               return redraw(currentOrigin);
             }
           });
-          return scope.notify = function() {
-            return $log.debug("Click on element");
-          };
         }
       };
     }
@@ -195,27 +203,37 @@
   });
 
   app.directive("wlNews", [
-    "$compile", "$injector", function($compile, $injector) {
-      return {
-        restrict: "E",
-        scope: {
-          items: "="
-        },
-        template: "<ul>\n  <li ng-repeat=\"item in items\">\n    <div>{{item.title}}</div>\n  </li>\n</ul>"
-      };
-    }
-  ]);
-
-  app.directive("wlVideo", [
-    "$compile", "$injector", "$sce", function($compile, $injector, $sce) {
+    "$log", function($log) {
       return {
         restrict: "E",
         scope: {
           items: "="
         },
         link: function(scope, element, attrs) {
-          return scope.trustSrc = function(src) {
+          return scope.notify = function(item) {
+            $log.debug("Clicked on video " + item.id);
+            return scope.$emit("contextChanged", "contentId", item.id);
+          };
+        },
+        template: "<ul class=\"small-block-grid-2 large-block-grid-2\">\n  <li ng-repeat=\"item in items\">\n    <img ng-src=\"{{item.meta.thumb}}\" ng-mouseover=\"notify(item)\" />\n    <h5>{{item.title}}</h5>\n    <p>\n    {{item.content}}<br />[ <a ng-href=\"{{item.content}}\">More Info</a> ]\n    </p>\n  </li>\n</ul>"
+      };
+    }
+  ]);
+
+  app.directive("wlVideo", [
+    "$compile", "$injector", "$sce", "$log", function($compile, $injector, $sce, $log) {
+      return {
+        restrict: "E",
+        scope: {
+          items: "="
+        },
+        link: function(scope, element, attrs) {
+          scope.trustSrc = function(src) {
             return $sce.trustAsResourceUrl(src);
+          };
+          return scope.notify = function(item) {
+            $log.debug("Clicked on video " + item.id);
+            return scope.$emit("contextChanged", "contentId", item.id);
           };
         },
         template: "<div ng-repeat=\"item in items\">\n    <h3>{{item.title}}</h3>\n    <div class=\"flex-video\">\n       <iframe ng-src=\"{{trustSrc(item.meta.videoURL)}}\" frameborder=\"0\" allowfullscreen></iframe>\n    </div>\n</div>"

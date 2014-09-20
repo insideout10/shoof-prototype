@@ -11,15 +11,19 @@ app.controller "ShoofCtrl", [
   (ContextManagerService, DataRetrieverService, $scope, $rootScope, $log) ->
     
     $scope.stack = {}    
+    $scope.observers = {}    
+    
     $scope.context = ContextManagerService.getContext()
     
     # Everytime the context changes the stack need to be update accordingly
     $rootScope.$on "contextChanged", (event, property, value) ->
       if ContextManagerService.addProperty property, value
-        ContextManagerService.rewriteStack($scope.stack)
+        ContextManagerService.rewriteStack($scope.stack, $scope.observers)
     
-    $rootScope.$on "containerAdded", (event, ctnOrigin) ->
+    $rootScope.$on "containerAdded", (event, ctnOrigin, ctnObserver) ->
+      $log.debug "Added ctn #{ctnOrigin} reactive to #{ctnObserver}"
       $scope.stack[ctnOrigin] = ctnOrigin
+      $scope.observers[ctnOrigin] = ctnObserver
       
     # Once in page containers are properly loaded
     # the controller it's notified and stack is updated
@@ -62,7 +66,7 @@ app.service "ContextManagerService", [
     service =
       _context: {}
       # Just a fake property
-      _allowedProperties: ['foo', 'userId']
+      _allowedProperties: ['contentId', 'userId']
     
     # Returns the current context
     service.getContext = ->
@@ -79,22 +83,24 @@ app.service "ContextManagerService", [
     # This output can be appended to containers origins, 
     # meaning that the current context is applied to current containers
     # Note: this implementazione is just for test pourpose
-    service.toString = ()->
-      out = "---"
+    service.toString = (observers)->
+      chunks = []
       for property in @_allowedProperties
-        if @_context[property]
-          out += "#{property}=#{@_context[property]}"
-    
-      out+= ".json"
-      out
+        if @_context[property] and (property in observers)
+          chunks.push "#{property}=#{@_context[property]}"
+      if chunks.length > 0
+        return "---#{chunks.join('')}.json"
+      else
+        return ".json"
+        
     # Rewrite origin means append the context to the origin
     # The oupput is a new container reference
-    service.rewriteOrigin = (origin)->
-      origin.replace ".json", @toString()
+    service.rewriteOrigin = (origin, observers)->
+      origin.replace ".json", @toString(observers)
     # Rewrite the whale page stack
-    service.rewriteStack = (stack)->
-      for id, origin of stack  
-        stack[id] = @rewriteOrigin id
+    service.rewriteStack = (stack, observers)->
+      for id, origin of stack    
+        stack[id] = @rewriteOrigin id, observers[id]
       stack
     # Reset the page stack
     service.resetStack = (stack)->
@@ -163,9 +169,15 @@ app.directive "wlContainer", [
       scope:
         uri: '@'
         stack: '='
+        observe: '@'
       link: (scope, element, attrs) ->
+
         # Notify itself to the controller 
-        scope.$emit "containerAdded", scope.uri
+        observers = []
+        if scope.observe
+          observers = scope.observe.split(',')
+
+        scope.$emit "containerAdded", scope.uri, observers
         # Private function used to redraw the directive content
         redraw = (currentOrigin)->
           $log.debug "Going to redraw ctn #{scope.uri}"
@@ -212,10 +224,6 @@ app.directive "wlContainer", [
               redraw(scope.uri)  
           else
             redraw(currentOrigin) 
-           
-
-        scope.notify = ()->
-          $log.debug "Click on element"
 
     )
 ]
@@ -233,17 +241,24 @@ $( document ).ready ()->
 
 # Sample skin directive for news
 app.directive "wlNews", [
-  "$compile"
-  "$injector"
-  ($compile, $injector) ->
+  "$log"
+  ($log) ->
     return (
       restrict: "E"
       scope:
         items: "="
+      link: (scope, element, attrs) ->
+        scope.notify = (item) ->
+          $log.debug "Clicked on video #{item.id}"
+          scope.$emit "contextChanged", "contentId", item.id
       template: """
-        <ul>
+        <ul class="small-block-grid-2 large-block-grid-2">
           <li ng-repeat="item in items">
-            <div>{{item.title}}</div>
+            <img ng-src="{{item.meta.thumb}}" ng-mouseover="notify(item)" />
+            <h5>{{item.title}}</h5>
+            <p>
+            {{item.content}}<br />[ <a ng-href="{{item.content}}">More Info</a> ]
+            </p>
           </li>
         </ul>
       """
@@ -255,7 +270,8 @@ app.directive "wlVideo", [
   "$compile"
   "$injector"
   "$sce"
-  ($compile, $injector, $sce) ->
+  "$log"
+  ($compile, $injector, $sce, $log) ->
     return (
       restrict: "E"
       scope:
@@ -263,6 +279,9 @@ app.directive "wlVideo", [
       link: (scope, element, attrs) ->
         scope.trustSrc = (src) ->
           $sce.trustAsResourceUrl(src)
+        scope.notify = (item) ->
+          $log.debug "Clicked on video #{item.id}"
+          scope.$emit "contextChanged", "contentId", item.id
       template: """
         <div ng-repeat="item in items">
             <h3>{{item.title}}</h3>

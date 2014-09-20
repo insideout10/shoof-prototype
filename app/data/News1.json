@@ -5,20 +5,38 @@
 	"items": [
 		{
 			"id": 11,
-			"title": "Renzi just died",
+			"title": "Obama just died",
 			"content": "He was bombed by terrorists while having his usual daily shit",
 			"uri": "http://mysite.com/api/posts/11",
 			"meta": {
-				"thumb": "http://mysite.com/images/11"
+				"thumb": "http://blog.rinnovabili.it/wp-content/uploads/2014/06/obama.jpg"
 			}
 		},
 		{
 			"id": 12,
-			"title": "Galletti just died",
-			"content": "He was bombed by terrorists while having his usual daily shit",
-			"uri": "http://mysite.com/api/posts/11",
+			"title": "About Putin",
+			"content": "For 16 years Putin served as an officer in the KGB, rising to the rank of Lieutenant Colonel before he retired to enter politics in his native Saint Petersburg in 1991.",
+			"uri": "http://en.wikipedia.org/wiki/Vladimir_Putin",
 			"meta": {
-				"thumb": "http://mysite.com/images/11"
+				"thumb": "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcSpGKyc8B3rSk9tJIzWoDjp7QO_OuM-SYPvZjtq8J70_voVnxgt"
+			}
+		},
+		{
+			"id": 13,
+			"title": "About Mondrian",
+			"content": "He was an important contributor to the De Stijl art movement and group, which was founded by Theo van Doesburg. He evolved a non-representational form which he termed neoplasticism.",
+			"uri": "http://en.wikipedia.org/wiki/Piet_Mondrian",
+			"meta": {
+				"thumb": "http://upload.wikimedia.org/wikipedia/commons/0/0b/Piet_Mondrian_2.jpg"
+			}
+		},
+		{
+			"id": 14,
+			"title": "About Thelonious Monk",
+			"content": "Thelonious Sphere Monk was an American jazz pianist and composer, considered one of the giants of American music",
+			"uri": "http://en.wikipedia.org/wiki/Thelonious_Monk",
+			"meta": {
+				"thumb": "https://fanart.tv/fanart/music/8e8c7417-c905-46b1-b42a-5260b4274ed4/artistbackground/monk-thelonious-4fc6171298ad6.jpg"
 			}
 		}
 	]
