@@ -200,6 +200,18 @@
     }
   ]);
 
+  app.directive("wlVideo", [
+    "$compile", "$injector", function($compile, $injector) {
+      return {
+        restrict: "E",
+        scope: {
+          items: "="
+        },
+        template: "<ul ng-repeat=\"item in items\">\n  <li>\n    <div>{{item.title}}</div>\n    <div class=\"flex-video\">\n      {{item.content}}\n    </div>\n  </li>\n</ul>"
+      };
+    }
+  ]);
+
 }).call(this);
 
 //# sourceMappingURL=shoof-ui.js.map
