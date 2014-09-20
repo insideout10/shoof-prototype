@@ -33,10 +33,6 @@ app.controller "ShoofCtrl", [
 
 
     # Test fn
-    $scope.test = () ->
-      $log.debug "Rewriting ctn uri"
-      $scope.stack["/data/News1.json"] = "/data/News1---foo=a.json"
-    # Test fn
     $scope.submit = () ->
       $log.debug "submit"
       $rootScope.$broadcast "contextChanged", $scope.contextProperty, $scope.contextPropertyValue 
@@ -168,11 +164,11 @@ app.directive "wlContainer", [
         redraw = (currentOrigin)->
           $log.debug "Going to redraw ctn #{scope.uri}"
           template = """
-            <div class="row">
-              <p>Current container uri <small>#{currentOrigin}</small></p>  
+            <div class="row container-wrapper">
+              <p class="debug-box">Current container uri: <strong>#{currentOrigin}</strong></p>  
               <wl-#{scope.container.skin} items="container.items"></wl-#{scope.container.skin}">
             </div>"""
-
+          $log.debug template
           element.html(template).show()
           $compile(element.contents()) scope
           true
@@ -201,6 +197,7 @@ app.directive "wlContainer", [
           if scope.container.success?
             scope.container.success (ctn) ->
               $log.debug angular.fromJson(ctn)
+              # set the scope container equal to ctn response
               scope.container = ctn
               redraw(currentOrigin)
             scope.container.error (response) ->
