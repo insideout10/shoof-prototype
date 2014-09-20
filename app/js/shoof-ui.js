@@ -123,18 +123,6 @@
     }
   ]);
 
-  app.directive("wlNews", [
-    "$compile", "$injector", function($compile, $injector) {
-      return {
-        restrict: "E",
-        scope: {
-          items: "="
-        },
-        template: "<ul ng-repeat=\"item in items\">\n  <li>\n    <div>{{item.title}}</div>\n  </li>\n</ul>"
-      };
-    }
-  ]);
-
   app.directive("wlContainer", [
     "$compile", "$log", function($compile, $log) {
       return {
@@ -199,6 +187,18 @@
       }
     ]);
   });
+
+  app.directive("wlNews", [
+    "$compile", "$injector", function($compile, $injector) {
+      return {
+        restrict: "E",
+        scope: {
+          items: "="
+        },
+        template: "<ul ng-repeat=\"item in items\">\n  <li>\n    <div>{{item.title}}</div>\n  </li>\n</ul>"
+      };
+    }
+  ]);
 
 }).call(this);
 
