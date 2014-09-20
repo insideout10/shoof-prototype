@@ -62,7 +62,7 @@ app.service "ContextManagerService", [
     service =
       _context: {}
       # Just a fake property
-      _allowedProperties: ['foo']
+      _allowedProperties: ['foo', 'userId']
     
     # Returns the current context
     service.getContext = ->
@@ -82,7 +82,8 @@ app.service "ContextManagerService", [
     service.toString = ()->
       out = "---"
       for property in @_allowedProperties
-        out += "#{property}=#{@_context[property]}"
+        if @_context[property]
+          out += "#{property}=#{@_context[property]}"
     
       out+= ".json"
       out

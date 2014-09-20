@@ -43,7 +43,7 @@
       var service;
       service = {
         _context: {},
-        _allowedProperties: ['foo']
+        _allowedProperties: ['foo', 'userId']
       };
       service.getContext = function() {
         return this._context;
@@ -62,7 +62,9 @@
         _ref = this._allowedProperties;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           property = _ref[_i];
-          out += "" + property + "=" + this._context[property];
+          if (this._context[property]) {
+            out += "" + property + "=" + this._context[property];
+          }
         }
         out += ".json";
         return out;

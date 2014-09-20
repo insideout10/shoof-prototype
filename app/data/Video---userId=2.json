@@ -1,0 +1,17 @@
+{
+  "ctn": "Video",
+  "origin": "/data/Video.json",
+  "items": [
+    {
+      "id": 17,
+      "title": "Best video ever",
+      "content": "yeeeee",
+      "uri": "http://mysite.com/api/posts/11",
+      "meta": {
+        "thumb": "http://mysite.com/images/11",
+        "videoURL": "https://www.youtube.com/embed/QH2-TGUlwu4" 
+      }
+    }
+  ], 
+  "skin": "video"
+}
