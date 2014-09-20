@@ -205,6 +205,23 @@
     }
   ]);
 
+  app.directive("wlVideo", [
+    "$compile", "$injector", "$sce", function($compile, $injector, $sce) {
+      return {
+        restrict: "E",
+        scope: {
+          items: "="
+        },
+        link: function(scope, element, attrs) {
+          return scope.trustSrc = function(src) {
+            return $sce.trustAsResourceUrl(src);
+          };
+        },
+        template: "<ul ng-repeat=\"item in items\">\n  <li>\n    <div>{{item.title}}</div>\n    <div class=\"flex-video\">\n       <iframe width=\"300\" height=\"250\" ng-src=\"{{trustSrc(item.meta.videoURL)}}\" frameborder=\"0\" allowfullscreen></iframe>\n    </div>\n  </li>\n</ul>"
+      };
+    }
+  ]);
+
 }).call(this);
 
 //# sourceMappingURL=shoof-ui.js.map
