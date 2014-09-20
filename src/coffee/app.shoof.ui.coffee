@@ -46,7 +46,7 @@ app.controller "ShoofCtrl", [
      # Test fn
     $scope.reset = () ->
       $log.debug "reset"
-      ContextManagerService.resetContext
+      ContextManagerService.resetContext()
       ContextManagerService.resetStack $scope.stack
       $scope.contextProperty = undefined
       $scope.contextPropertyValue = undefined
