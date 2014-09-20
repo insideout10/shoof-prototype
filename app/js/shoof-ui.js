@@ -218,7 +218,7 @@
             return $sce.trustAsResourceUrl(src);
           };
         },
-        template: "<ul ng-repeat=\"item in items\">\n  <li>\n    <div>{{item.title}}</div>\n    <div class=\"flex-video\">\n       <iframe width=\"300\" height=\"250\" ng-src=\"{{trustSrc(item.meta.videoURL)}}\" frameborder=\"0\" allowfullscreen></iframe>\n    </div>\n  </li>\n</ul>"
+        template: "<div ng-repeat=\"item in items\">\n    <h3>{{item.title}}</h3>\n    <div class=\"flex-video\">\n       <iframe ng-src=\"{{trustSrc(item.meta.videoURL)}}\" frameborder=\"0\" allowfullscreen></iframe>\n    </div>\n</div>"
       };
     }
   ]);

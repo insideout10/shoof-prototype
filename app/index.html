@@ -21,11 +21,10 @@
     </div>
   </div>
 
-  <wl-container uri="data/Video.json" stack="stack"></wl-container>
-  <wl-container uri="data/News1.json" stack="stack"></wl-container>
-  <wl-container uri="data/News1.json" stack="stack"></wl-container>
-  
-  <script type="text/javascript">
+  <div class="row">
+    <div class="large-7 columns">
+  		<wl-container uri="data/Video.json" stack="stack"></wl-container>
+    <script type="text/javascript">
 window.containers['data/Video.json'] = {
   "ctn": "Video",
   "origin": "/data/Video.json",
@@ -45,9 +44,12 @@ window.containers['data/Video.json'] = {
 };
   </script>
 
+  		<wl-container uri="data/News1.json" stack="stack"></wl-container>
+  		<wl-container uri="data/News1.json" stack="stack"></wl-container>
 
-    <div class="row panel">
-    <div class="large-6 columns">
+    </div>
+    <div class="large-5 columns">
+    	    <div class="row panel">
       <h3>Debug Panel</h3>
 
       <h5>Context modifier</h5>
@@ -57,8 +59,6 @@ window.containers['data/Video.json'] = {
         <input type="submit" value="update context" class="button small round"/>
         <input type="button" ng-click="reset()" value="reset context" class="button small round alert" />
       </form>    
-    </div>
-    <div class="large-6 columns">
       <h5>Stack inspector</h5>
  		<table>
  		    <thead>
@@ -78,6 +78,12 @@ window.containers['data/Video.json'] = {
 			<tbody>
         </table>
     </div>
-  </div> 
+    </div>
+  </div>
+  
+
+
+
+   
 </body>
 </html>

@@ -31,14 +31,12 @@ app.directive "wlVideo", [
         scope.trustSrc = (src) ->
           $sce.trustAsResourceUrl(src)
       template: """
-        <ul ng-repeat="item in items">
-          <li>
-            <div>{{item.title}}</div>
+        <div ng-repeat="item in items">
+            <h3>{{item.title}}</h3>
             <div class="flex-video">
-               <iframe width="300" height="250" ng-src="{{trustSrc(item.meta.videoURL)}}" frameborder="0" allowfullscreen></iframe>
+               <iframe ng-src="{{trustSrc(item.meta.videoURL)}}" frameborder="0" allowfullscreen></iframe>
             </div>
-          </li>
-        </ul>
+        </div>
       """
     )
 ]
