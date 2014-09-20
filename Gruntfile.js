@@ -10,7 +10,8 @@ module.exports = function(grunt) {
       			},
         		files: {
           			'app/js/shoof-ui.js': [
-            			'src/coffee/app.shoof.ui.coffee'  
+            			'src/coffee/app.shoof.ui.coffee',
+            			'src/coffee/app.shoof.ui.skins.coffee'
           			]
           		}
           	}
