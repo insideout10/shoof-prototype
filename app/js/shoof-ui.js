@@ -21,10 +21,6 @@
       $scope.dataFor = function(ctnOrigin) {
         return DataRetrieverService.retrieveOrLoadDataStructureFor(ctnOrigin);
       };
-      $scope.test = function() {
-        $log.debug("Rewriting ctn uri");
-        return $scope.stack["/data/News1.json"] = "/data/News1---foo=a.json";
-      };
       $scope.submit = function() {
         $log.debug("submit");
         return $rootScope.$broadcast("contextChanged", $scope.contextProperty, $scope.contextPropertyValue);
@@ -152,7 +148,8 @@
           redraw = function(currentOrigin) {
             var template;
             $log.debug("Going to redraw ctn " + scope.uri);
-            template = "<div class=\"row\">\n  <p>Current container uri <small>" + currentOrigin + "</small></p>  \n  <wl-" + scope.container.skin + " items=\"container.items\"></wl-" + scope.container.skin + "\">\n</div>";
+            template = "<div class=\"row container-wrapper\">\n  <p class=\"debug-box\">Current container uri: <strong>" + currentOrigin + "</strong></p>  \n  <wl-" + scope.container.skin + " items=\"container.items\"></wl-" + scope.container.skin + "\">\n</div>";
+            $log.debug(template);
             element.html(template).show();
             $compile(element.contents())(scope);
             return true;

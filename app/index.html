@@ -15,27 +15,38 @@
   
   <div class="row">
     <div class="large-12 columns">
-      <h1>MICO SC-02 <small>Wordpress-less HTML5/JS angular based frontend prototype</small></h1>
+      <h1>MICO SC-02 Prototype</h1>
+      <h2 class="subheader"><small>Wordpress-less HTML5/JS angular based frontend prototype</small></h2>
       <hr/>
-      <ul id="contextinspector">
-      	<h6>Context Inspector</h6>
-      	<ul ng-repeat="(k, v) in context">
-          <li>Property <strong>{{k}}</strong>, value <strong>{{v}}</strong></li>
-        </ul>
-        <h6>Context modifier</h6>
-        <form ng-submit="submit()">
-        	<input type="text" ng-model="contextProperty" placeholder="Context property"/>
-        	<input type="text" ng-model="contextPropertyValue" placeholder="Context property value"/>
-        	<input type="submit" value="update context" /> |
-        	<input type="button" ng-click="reset()" value="reset" />
-    	</form>
-      </ul>
     </div>
+  </div>
+
+  <div class="row">
+    <div class="large-4 columns">
+      <h6>Context Inspector</h6>
+      <ul><li ng-repeat="(k, v) in context">Property <strong>{{k}}</strong>, value <strong>{{v}}</strong></li></ul>
+    </div>
+    <div class="large-4 columns">
+      <h6>Context modifier</h6>
+      <form ng-submit="submit()">
+        <input type="text" ng-model="contextProperty" placeholder="Context property"/>
+        <input type="text" ng-model="contextPropertyValue" placeholder="Context property value"/>
+        <input type="submit" value="update context" class="button small round"/>
+        <input type="button" ng-click="reset()" value="reset" class="button small round alert" />
+      </form>     
+    </div>
+    <div class="large-4 columns">
+      <h6>Current stack</h6>
+ 		<ul>
+          <li ng-repeat="(k, v) in stack">Container <strong>{{k}}</strong><br /> Current origin <strong>{{v}}</strong></li>
+        </ul>
+    </div>
+     <hr/>
   </div> 
 
-  <wl-container uri="/data/News1.json" stack="stack"></wl-container>
 
-  <h3 ng-click="test()">Test</h3>
+  <wl-container uri="/data/News1.json" stack="stack"></wl-container>
+<wl-container uri="/data/News1.json" stack="stack"></wl-container>
 
   <script type="text/javascript">
 window.containers['/data/News1.json'] = {

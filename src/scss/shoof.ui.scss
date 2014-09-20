@@ -1,7 +1,15 @@
 $font-stack:    Helvetica, sans-serif;
-$primary-color: #6c0;
+$primary-color: #000;
 
 body {
   font: 100% $font-stack;
   color: $primary-color;
+}
+.container-wrapper {
+	border:#e2e2e2 1px solid;
+}
+.container-wrapper p.debug-box {
+	background-color:#e2e2e2;
+	color:#666;
+	padding:0em 1em;
 }
