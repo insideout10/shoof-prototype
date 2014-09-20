@@ -13,6 +13,9 @@
           return ContextManagerService.rewriteStack($scope.stack);
         }
       });
+      $rootScope.$on("containerAdded", function(event, ctnOrigin) {
+        return $scope.stack[ctnOrigin] = ctnOrigin;
+      });
       $rootScope.$on("containerLoaded", function(event, ctnOrigin) {
         $log.debug("Notified about ctn " + ctnOrigin + " loading");
         $scope.stack[ctnOrigin] = ctnOrigin;
@@ -109,9 +112,11 @@
       service.retrieveOrLoadDataStructureFor = function(ctnOrigin) {
         var container, promise;
         if (!ctnOrigin) {
+          $log.warn("Undefined origin within retrieveOrLoadDataStructureFor!");
           return;
         }
         container = this._containers[ctnOrigin];
+        $log.debug(container);
         if (!container) {
           $log.warn("Ctn " + ctnOrigin + " missing: try to load it remotely");
           promise = $http.get(ctnOrigin);
@@ -133,22 +138,22 @@
         },
         link: function(scope, element, attrs) {
           var redraw;
+          scope.$emit("containerAdded", scope.uri);
           redraw = function(currentOrigin) {
             var template;
             $log.debug("Going to redraw ctn " + scope.uri);
             template = "<div class=\"row container-wrapper\">\n  <p class=\"debug-box\">Current container uri: <strong>" + currentOrigin + "</strong></p>  \n  <wl-" + scope.container.skin + " items=\"container.items\"></wl-" + scope.container.skin + "\">\n</div>";
-            $log.debug(template);
+            $log.debug(scope.container);
             element.html(template).show();
             $compile(element.contents())(scope);
             return true;
           };
           scope.$watchCollection('stack', function(newStack, oldStack) {
             var currentOrigin;
-            $log.debug('New value for page stack...');
-            $log.debug(oldStack[scope.uri]);
-            $log.debug(newStack[scope.uri]);
             currentOrigin = newStack[scope.uri];
+            $log.debug("Updating container " + scope.uri + " with content from " + currentOrigin);
             scope.container = scope.$parent.dataFor(currentOrigin);
+            $log.debug(scope.container);
             if (!scope.container) {
               $log.warn("Content for ctn " + scope.uri + " is missing");
               return;

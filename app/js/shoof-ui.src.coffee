@@ -18,6 +18,9 @@ app.controller "ShoofCtrl", [
       if ContextManagerService.addProperty property, value
         ContextManagerService.rewriteStack($scope.stack)
     
+    $rootScope.$on "containerAdded", (event, ctnOrigin) ->
+      $scope.stack[ctnOrigin] = ctnOrigin
+      
     # Once in page containers are properly loaded
     # the controller it's notified and stack is updated
     $rootScope.$on "containerLoaded", (event, ctnOrigin) ->
@@ -129,10 +132,11 @@ app.service "DataRetrieverService", [
     service.retrieveOrLoadDataStructureFor = (ctnOrigin) ->
       # If ctnOrigin is undefined nothing to do
       unless ctnOrigin
+        $log.warn "Undefined origin within retrieveOrLoadDataStructureFor!"
         return 
 
       container = @_containers[ctnOrigin]
-      
+      $log.debug container
       # If container is not in local storage load it remotely and return the $http promise
       unless container
         $log.warn "Ctn #{ctnOrigin} missing: try to load it remotely"
@@ -160,6 +164,7 @@ app.directive "wlContainer", [
         stack: '='
       link: (scope, element, attrs) ->
 
+        scope.$emit "containerAdded", scope.uri
         # Private function used to redraw the directive content
         redraw = (currentOrigin)->
           $log.debug "Going to redraw ctn #{scope.uri}"
@@ -168,7 +173,7 @@ app.directive "wlContainer", [
               <p class="debug-box">Current container uri: <strong>#{currentOrigin}</strong></p>  
               <wl-#{scope.container.skin} items="container.items"></wl-#{scope.container.skin}">
             </div>"""
-          $log.debug template
+          $log.debug scope.container
           element.html(template).show()
           $compile(element.contents()) scope
           true
@@ -179,17 +184,18 @@ app.directive "wlContainer", [
         # If the promise fails redrawing is aborted
         scope.$watchCollection 'stack', (newStack, oldStack)->
           
-          $log.debug 'New value for page stack...'    
-          $log.debug oldStack[scope.uri]
-          $log.debug newStack[scope.uri]
+          #$log.debug oldStack[scope.uri]
+          #$log.debug newStack[scope.uri]
           
           # if newStack[scope.uri] is oldStack[scope.uri]
           #   $log.debug "Nothing to do indeed"
           #   return
           currentOrigin = newStack[scope.uri]
+          $log.debug "Updating container #{scope.uri} with content from #{currentOrigin}"    
+          
           # TODO $parent scope usage should be avoided
           scope.container = scope.$parent.dataFor(currentOrigin)
-          
+          $log.debug scope.container
           unless scope.container
             $log.warn "Content for ctn #{scope.uri} is missing"
             return 
