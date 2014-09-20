@@ -1,26 +1,26 @@
 {
-	ctn: 'News1',
-	origin: '/data/News1.json',
-	items: [
+	"ctn": "News1",
+	"origin": "/data/News1.json",
+	"items": [
 		{
-			'id': 11,
-			'title': 'Obama just died',
-			'content': 'He was bombed by terrorists while having his usual daily shit',
-			'uri': 'http://mysite.com/api/posts/11',
-			'meta': {
-				'thumb': 'http://mysite.com/images/11'
+			"id": 11,
+			"title": "Obama just died",
+			"content": "He was bombed by terrorists while having his usual daily shit",
+			"uri": "http://mysite.com/api/posts/11",
+			"meta": {
+				"thumb": "http://mysite.com/images/11"
 			}
 		},
 		{
-			'id': 5,
-			'title': 'Ukranians not happy about new Nike shoes model',
-			'content': 'We interviewed some ukranians, they really love Nike shoes.',
-			'uri': 'http://mysite.com/api/posts/5',
-			'meta': {
-				'thumb': 'http://mysite.com/images/5'
+			"id": 5,
+			"title": "Ukranians not happy about new Nike shoes model",
+			"content": "We interviewed some ukranians, they really love Nike shoes.",
+			"uri": "http://mysite.com/api/posts/5",
+			"meta": {
+				"thumb": "http://mysite.com/images/5"
 			}
 		},
 
 	], 
-	skin: 'news'
+	"skin": "news"
 },

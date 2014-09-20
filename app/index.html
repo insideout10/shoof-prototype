@@ -17,36 +17,52 @@
     <div class="large-12 columns">
       <h1>MICO SC-02 <small>Wordpress-less HTML5/JS angular based frontend prototype</small></h1>
       <hr/>
+      <ul id="contextinspector">
+      	<h6>Context Inspector</h6>
+      	<ul ng-repeat="(k, v) in context">
+          <li>Property <strong>{{k}}</strong>, value <strong>{{v}}</strong></li>
+        </ul>
+        <h6>Context modifier</h6>
+        <form ng-submit="submit()">
+        	<input type="text" ng-model="contextProperty" placeholder="Context property"/>
+        	<input type="text" ng-model="contextPropertyValue" placeholder="Context property value"/>
+        	<input type="submit" value="update context" /> |
+        	<input type="button" ng-click="reset()" value="reset" />
+    	</form>
+      </ul>
     </div>
   </div> 
 
-  <wl-container ctn="News1" uri="/data/News1.json"></wl-container>
+  <wl-container uri="/data/News1.json" stack="stack"></wl-container>
+
+  <h3 ng-click="test()">Test</h3>
+
   <script type="text/javascript">
 window.containers['/data/News1.json'] = {
-	ctn: 'News1',
-	origin: '/data/News1.json',
-	items: [
+	"ctn": "News1",
+	"origin": "/data/News1.json",
+	"items": [
 		{
-			'id': 11,
-			'title': 'Obama just died',
-			'content': 'He was bombed by terrorists while having his usual daily shit',
-			'uri': 'http://mysite.com/api/posts/11',
-			'meta': {
-				'thumb': 'http://mysite.com/images/11'
+			"id": 11,
+			"title": "Obama just died",
+			"content": "He was bombed by terrorists while having his usual daily shit",
+			"uri": "http://mysite.com/api/posts/11",
+			"meta": {
+				"thumb": "http://mysite.com/images/11"
 			}
 		},
 		{
-			'id': 5,
-			'title': 'Ukranians not happy about new Nike shoes model',
-			'content': 'We interviewed some ukranians, they really love Nike shoes.',
-			'uri': 'http://mysite.com/api/posts/5',
-			'meta': {
-				'thumb': 'http://mysite.com/images/5'
+			"id": 5,
+			"title": "Ukranians were really happy this time",
+			"content": "We interviewed some ukranians, they really love Nike shoes.",
+			"uri": "http://mysite.com/api/posts/5",
+			"meta": {
+				"thumb": "http://mysite.com/images/5"
 			}
 		},
 
 	], 
-	skin: 'news'
+	"skin": "news"
 };
   </script>
 </body>
