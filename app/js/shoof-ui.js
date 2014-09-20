@@ -6,10 +6,8 @@
 
   app.controller("ShoofCtrl", [
     "ContextManagerService", "DataRetrieverService", "$scope", "$rootScope", "$log", function(ContextManagerService, DataRetrieverService, $scope, $rootScope, $log) {
-      var contextChanged;
       $scope.stack = {};
       $scope.context = ContextManagerService.getContext();
-      contextChanged = function(property, value) {};
       $rootScope.$on("contextChanged", function(event, property, value) {
         if (ContextManagerService.addProperty(property, value)) {
           return ContextManagerService.rewriteStack($scope.stack);
@@ -155,7 +153,6 @@
             var template;
             $log.debug("Going to redraw ctn " + scope.uri);
             template = "<div class=\"row\">\n  <p>Current container uri <small>" + currentOrigin + "</small></p>  \n  <wl-" + scope.container.skin + " items=\"container.items\"></wl-" + scope.container.skin + "\">\n</div>";
-            $log.debug(template);
             element.html(template).show();
             $compile(element.contents())(scope);
             return true;

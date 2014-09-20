@@ -1,7 +1,7 @@
 # Test mock prototype
 app = angular.module("shoof.ui", [])
 
-# UiCtrl manage communications between renderers and services
+# UiCtrl manage communications between skins, context and data retriever
 app.controller "ShoofCtrl", [
   "ContextManagerService"
   "DataRetrieverService"
@@ -12,33 +12,34 @@ app.controller "ShoofCtrl", [
     
     $scope.stack = {}    
     $scope.context = ContextManagerService.getContext()
-
-    contextChanged = (property, value) ->
-        
+    
+    # Everytime the context changes the stack need to be update accordingly
     $rootScope.$on "contextChanged", (event, property, value) ->
       if ContextManagerService.addProperty property, value
         ContextManagerService.rewriteStack($scope.stack)
-        
+    
+    # Once in page containers are properly loaded
+    # the controller it's notified and stack is updated
     $rootScope.$on "containerLoaded", (event, ctnOrigin) ->
       $log.debug "Notified about ctn #{ctnOrigin} loading"
       $scope.stack[ctnOrigin] = ctnOrigin
-      # TODO investigate 
+      # TODO Investigate about: it seems to berequired an explicit $digist() execution here 
       $scope.$digest()
 
     # Retrieve container data trough a container uri / origin
+    # Data retrieving is delegated to DataRetrieverService
     $scope.dataFor = (ctnOrigin) ->
       DataRetrieverService.retrieveOrLoadDataStructureFor(ctnOrigin)
+
 
     # Test fn
     $scope.test = () ->
       $log.debug "Rewriting ctn uri"
       $scope.stack["/data/News1.json"] = "/data/News1---foo=a.json"
-
     # Test fn
     $scope.submit = () ->
       $log.debug "submit"
       $rootScope.$broadcast "contextChanged", $scope.contextProperty, $scope.contextPropertyValue 
-
      # Test fn
     $scope.reset = () ->
       $log.debug "reset"
@@ -49,7 +50,12 @@ app.controller "ShoofCtrl", [
 
 ]
 
-# Represents the Context
+# Represents and manage the Context
+# The context is made up a set of key / value properties
+# @_allowedProperties define which properties are allowed within the context definition
+# The current context can be outputed as a querystring fragment
+# Append this fragment to an existing uri means 
+# to apply a context to an existing container, genereting a new container reference 
 app.service "ContextManagerService", [
   "$log", 
   ($log) ->
@@ -58,9 +64,11 @@ app.service "ContextManagerService", [
       _context: {}
       # Just a fake property
       _allowedProperties: ['foo']
-      
+    
+    # Returns the current context
     service.getContext = ->
       @_context
+    # Add a property to the current context, just if the parameter is allowed to be used  
     service.addProperty = (property, value)->
       unless property in @_allowedProperties
         $log.warn "ContextManager does not allow property #{property}"
@@ -68,6 +76,10 @@ app.service "ContextManagerService", [
 
       @_context[property] = value
       true
+    # Returns the context as querystring fragment
+    # This output can be appended to containers origins, 
+    # meaning that the current context is applied to current containers
+    # Note: this implementazione is just for test pourpose
     service.toString = ()->
       out = "---"
       for property in @_allowedProperties
@@ -75,23 +87,30 @@ app.service "ContextManagerService", [
     
       out+= ".json"
       out
+    # Rewrite origin means append the context to the origin
+    # The oupput is a new container reference
     service.rewriteOrigin = (origin)->
       origin.replace ".json", @toString()
+    # Rewrite the whale page stack
     service.rewriteStack = (stack)->
       for id, origin of stack  
         stack[id] = @rewriteOrigin id
       stack
+    # Reset the page stack
     service.resetStack = (stack)->
       for id, origin of stack  
         stack[id] = id
       stack
-    
+    # Reset the context    
     service.resetContext = ()->
       @_context = {}
 
     service
 ]
 
+# Data retrieving specilized service
+# Store containers content in @_containers
+# If a data structure is missing try to load from remote
 app.service "DataRetrieverService", [
   "$http",
   "$log",
@@ -108,18 +127,23 @@ app.service "DataRetrieverService", [
         $log.debug "Going to notify ctn #{origin} was loaded!"
         $rootScope.$broadcast "containerLoaded", origin
 
+    # retrieve data for a container with uri ctnOrigin
+    # if it's presente in containers local storage @_containers return it
+    # Otherwise try to retrieve by $http
     service.retrieveOrLoadDataStructureFor = (ctnOrigin) ->
+      # If ctnOrigin is undefined nothing to do
       unless ctnOrigin
         return 
 
       container = @_containers[ctnOrigin]
       
+      # If container is not in local storage load it remotely and return the $http promise
       unless container
         $log.warn "Ctn #{ctnOrigin} missing: try to load it remotely"
               
         promise = $http.get ctnOrigin
         return promise
-
+      # Otherwise returns the container itself
       container
     
     # loop containers and find container with type = containerType
@@ -128,7 +152,7 @@ app.service "DataRetrieverService", [
     service
 ]
 
-# Generic container directive
+# Sample skin directive for news
 app.directive "wlNews", [
   "$compile"
   "$injector"
@@ -159,6 +183,7 @@ app.directive "wlContainer", [
         stack: '='
       link: (scope, element, attrs) ->
 
+        # Private function used to redraw the directive content
         redraw = (currentOrigin)->
           $log.debug "Going to redraw ctn #{scope.uri}"
           template = """
@@ -167,13 +192,14 @@ app.directive "wlContainer", [
               <wl-#{scope.container.skin} items="container.items"></wl-#{scope.container.skin}">
             </div>"""
 
-          $log.debug template
-          
           element.html(template).show()
           $compile(element.contents()) scope
           true
 
-        # Observe stack chnages
+        # Observe chnages on stack property
+        # If stack changes, contents need to be retrieved
+        # If DataRetriever return a promise, the promise is executed
+        # If the promise fails redrawing is aborted
         scope.$watchCollection 'stack', (newStack, oldStack)->
           
           $log.debug 'New value for page stack...'    
@@ -210,8 +236,9 @@ app.directive "wlContainer", [
     )
 ]
 
+# Define window.containers: it's the storage for in-page loaded containers
 window.containers = {}
-
+# Once the page is loaded, angula app is bootstraped
 $( document ).ready ()->
   injector = angular.bootstrap(document, ["shoof.ui"])
   injector.invoke(['DataRetrieverService', (DataRetrieverService) ->
