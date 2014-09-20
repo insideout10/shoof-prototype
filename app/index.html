@@ -21,36 +21,12 @@
     </div>
   </div>
 
-  <div class="row">
-    <div class="large-4 columns">
-      <h5>Context modifier</h5>
-      <form ng-submit="submit()">
-        <input type="text" ng-model="contextProperty" placeholder="Context property"/>
-        <input type="text" ng-model="contextPropertyValue" placeholder="Context property value"/>
-        <input type="submit" value="update context" class="button small round"/>
-        <input type="button" ng-click="reset()" value="reset" class="button small round alert" />
-      </form>     
-    </div>
-    <div class="large-3 columns">
-      <h5>Context Inspector</h5>
-      <ul><li ng-repeat="(k, v) in context">Property <strong>{{k}}</strong>, value <strong>{{v}}</strong></li></ul>
-    </div>
-    <div class="large-5 columns">
-      <h5>Current stack</h5>
- 		<table>
-          <tr ng-repeat="(k, v) in stack"><td>{{k}}</td><td>{{v}}</td></tr>
-        </table>
-    </div>
-     <hr/>
-  </div> 
-
-
-  <wl-container uri="data/News1.json" stack="stack"></wl-container>
-  <wl-container uri="data/News1.json" stack="stack"></wl-container>
   <wl-container uri="data/Video.json" stack="stack"></wl-container>
-
+  <wl-container uri="data/News1.json" stack="stack"></wl-container>
+  <wl-container uri="data/News1.json" stack="stack"></wl-container>
+  
   <script type="text/javascript">
-window.containers['/data/Video.json'] = {
+window.containers['data/Video.json'] = {
   "ctn": "Video",
   "origin": "/data/Video.json",
   "items": [
@@ -68,5 +44,40 @@ window.containers['/data/Video.json'] = {
   "skin": "video"
 };
   </script>
+
+
+    <div class="row panel">
+    <div class="large-6 columns">
+      <h3>Debug Panel</h3>
+
+      <h5>Context modifier</h5>
+      <form ng-submit="submit()">
+        <input type="text" ng-model="contextProperty" placeholder="Context property"/>
+        <input type="text" ng-model="contextPropertyValue" placeholder="Context property value"/>
+        <input type="submit" value="update context" class="button small round"/>
+        <input type="button" ng-click="reset()" value="reset context" class="button small round alert" />
+      </form>    
+    </div>
+    <div class="large-6 columns">
+      <h5>Stack inspector</h5>
+ 		<table>
+ 		    <thead>
+    		<tr><th>Container Id</th><th>Current container origin</th></tr>
+  			</thead>
+  			<tbody>
+          		<tr ng-repeat="(k, v) in stack"><td>{{k}}</td><td>{{v}}</td></tr>
+			<tbody>
+        </table>
+      <h5>Context inspector</h5>
+ 		<table>
+ 		    <thead>
+    		<tr><th>Context property name</th><th>Context property value</th></tr>
+  			</thead>
+  			<tbody>
+          		<tr ng-repeat="(k, v) in context"><td>{{k}}</td><td>{{v}}</td></tr>
+			<tbody>
+        </table>
+    </div>
+  </div> 
 </body>
 </html>

@@ -15,3 +15,8 @@ body {
   color: #666;
   padding: 0em 1em;
 }
+
+/* line 17, ../../src/scss/shoof.ui.scss */
+.debug-panel {
+  background-color: #ACCD6C;
+}

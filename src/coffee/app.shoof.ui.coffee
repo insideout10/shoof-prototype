@@ -164,7 +164,7 @@ app.directive "wlContainer", [
         uri: '@'
         stack: '='
       link: (scope, element, attrs) ->
-
+        # Notify itself to the controller 
         scope.$emit "containerAdded", scope.uri
         # Private function used to redraw the directive content
         redraw = (currentOrigin)->
@@ -203,7 +203,6 @@ app.directive "wlContainer", [
 
           if scope.container.success?
             scope.container.success (ctn) ->
-              $log.debug angular.fromJson(ctn)
               # set the scope container equal to ctn response
               scope.container = ctn
               redraw(currentOrigin)

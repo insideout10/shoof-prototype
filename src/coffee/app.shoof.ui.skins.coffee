@@ -8,8 +8,8 @@ app.directive "wlNews", [
       scope:
         items: "="
       template: """
-        <ul ng-repeat="item in items">
-          <li>
+        <ul>
+          <li ng-repeat="item in items">
             <div>{{item.title}}</div>
           </li>
         </ul>

@@ -162,7 +162,6 @@
             }
             if (scope.container.success != null) {
               scope.container.success(function(ctn) {
-                $log.debug(angular.fromJson(ctn));
                 scope.container = ctn;
                 return redraw(currentOrigin);
               });
@@ -202,7 +201,7 @@
         scope: {
           items: "="
         },
-        template: "<ul ng-repeat=\"item in items\">\n  <li>\n    <div>{{item.title}}</div>\n  </li>\n</ul>"
+        template: "<ul>\n  <li ng-repeat=\"item in items\">\n    <div>{{item.title}}</div>\n  </li>\n</ul>"
       };
     }
   ]);
