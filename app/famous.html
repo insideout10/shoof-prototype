@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<link href="../bower_components/foundation/css/normalize.css" rel="stylesheet" type="text/css" />
+<link href="../bower_components/foundation/css/foundation.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="../bower_components/famous-angular/dist/famous-angular.css">
+
+<script src="../bower_components/foundation/js/vendor/jquery.js"></script>
+<script src="../bower_components/foundation/js/foundation.min.js"></script>
+<script src="../bower_components/requirejs/require.js"></script>
+<script src="../bower_components/angular/angular.min.js"></script>
+<script src="../bower_components/angular-route/angular-route.js"></script>
+<script src="../bower_components/underscore/underscore.js"></script>
+<script src="../bower_components/famous/famous-global.js"></script>
+<script src="../bower_components/famous-angular/dist/famous-angular.js"></script>
+<!--<script>
+    //set requirejs's base to where the famous lib folder lives
+    require.config({baseUrl: '../bower_components'});
+</script>-->
+<script src="js/shoof-ui.js"></script>
+<link href="css/shoof.ui.css" rel="stylesheet" type="text/css">
+  <meta charset="utf-8">
+  <title>Mico SC-02 frontend prototype</title>
+</head>
+<body ng-controller="ShoofCtrl">
+  
+  <div class="row">
+    <div class="large-12 columns">
+      <h1>MICO SC-02 Prototype</h1>
+      <h2 class="subheader"><small>Wordpress-less HTML5/JS angular based frontend prototype</small></h2>
+      <hr/>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="large-7 columns">
+  		<wl-container uri="data/Video.json" stack="stack" observe="contentId,userId"></wl-container>
+    <script type="text/javascript">
+window.containers['data/Video.json'] = {
+  "ctn": "Video",
+  "origin": "/data/Video.json",
+  "items": [
+    {
+      "id": 17,
+      "title": "Best video ever",
+      "content": "yeeeee",
+      "uri": "http://mysite.com/api/posts/11",
+      "meta": {
+        "thumb": "http://mysite.com/images/11",
+        "videoURL": "https://www.youtube.com/embed/ee925OTFBCA" 
+      }
+    }
+  ], 
+  "skin": "video"
+};
+  </script>
+
+  		<wl-container uri="data/News1.json" stack="stack" observe=""></wl-container>
+
+    </div>
+    <div class="large-5 columns">
+    	    <div class="row panel">
+      <h3>Debug Panel</h3>
+
+      <h5>Context modifier</h5>
+      <form ng-submit="submit()">
+        <input type="text" ng-model="contextProperty" placeholder="Context property"/>
+        <input type="text" ng-model="contextPropertyValue" placeholder="Context property value"/>
+        <input type="submit" value="update context" class="button small round"/>
+        <input type="button" ng-click="reset()" value="reset context" class="button small round alert" />
+      </form>    
+      <h5>Stack inspector</h5>
+ 		<table>
+ 		    <thead>
+    		<tr><th>Container Id</th><th>Current container origin</th></tr>
+  			</thead>
+  			<tbody>
+          		<tr ng-repeat="(k, v) in stack"><td>{{k}}</td><td>{{v}}</td></tr>
+			</tbody>
+        </table>
+      <h5>Context inspector</h5>
+ 		<table>
+ 		    <thead>
+    		<tr><th>Context property name</th><th>Context property value</th></tr>
+  			</thead>
+  			<tbody>
+          		<tr ng-repeat="(k, v) in context"><td>{{k}}</td><td>{{v}}</td></tr>
+			</tbody>
+        </table>
+     <h5>Observer inspector</h5>
+ 		<table>
+ 		    <thead>
+    		<tr><th>Container</th><th>Observers</th></tr>
+  			</thead>
+  			<tbody>
+          		<tr ng-repeat="(k, v) in observers"><td>{{k}}</td><td>{{v}}</td></tr>
+			</tbody>
+        </table>
+    </div>
+    </div>
+  </div>
+  
+
+<fa-app style="height: 200px"><fa-surface fa-background-color="'red'">Hello world</fa-surface></fa-app>
+
+   
+</body>
+</html>

@@ -1,5 +1,5 @@
 # Test mock prototype
-app = angular.module("shoof.ui", [])
+app = angular.module("shoof.ui", ["ngRoute", "famous.angular"])
 
 # UiCtrl manage communications between skins, context and data retriever
 app.controller "ShoofCtrl", [
@@ -46,7 +46,7 @@ app.controller "ShoofCtrl", [
      # Test fn
     $scope.reset = () ->
       $log.debug "reset"
-      ContextManagerService.resetContext
+      ContextManagerService.resetContext()
       ContextManagerService.resetStack $scope.stack
       $scope.contextProperty = undefined
       $scope.contextPropertyValue = undefined
@@ -292,3 +292,4 @@ app.directive "wlVideo", [
       """
     )
 ]
+console.log 'ciao raga'

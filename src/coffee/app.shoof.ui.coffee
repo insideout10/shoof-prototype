@@ -1,5 +1,5 @@
 # Test mock prototype
-app = angular.module("shoof.ui", [])
+app = angular.module("shoof.ui", ["ngRoute", "famous.angular"])
 
 # UiCtrl manage communications between skins, context and data retriever
 app.controller "ShoofCtrl", [

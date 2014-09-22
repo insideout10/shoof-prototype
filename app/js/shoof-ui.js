@@ -2,7 +2,7 @@
   var app,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  app = angular.module("shoof.ui", []);
+  app = angular.module("shoof.ui", ["ngRoute", "famous.angular"]);
 
   app.controller("ShoofCtrl", [
     "ContextManagerService", "DataRetrieverService", "$scope", "$rootScope", "$log", function(ContextManagerService, DataRetrieverService, $scope, $rootScope, $log) {
@@ -33,7 +33,7 @@
       };
       return $scope.reset = function() {
         $log.debug("reset");
-        ContextManagerService.resetContext;
+        ContextManagerService.resetContext();
         ContextManagerService.resetStack($scope.stack);
         $scope.contextProperty = void 0;
         return $scope.contextPropertyValue = void 0;
@@ -240,6 +240,8 @@
       };
     }
   ]);
+
+  console.log('ciao raga');
 
 }).call(this);
 
