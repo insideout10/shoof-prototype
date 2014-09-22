@@ -4,16 +4,13 @@ app.directive "wlNews", [
   ($log) ->
     return (
       restrict: "E"
+      require: "^wlContainer"
       scope:
         items: "="
-      link: (scope, element, attrs) ->
-        scope.notify = (item) ->
-          $log.debug "Clicked on video #{item.id}"
-          scope.$emit "contextChanged", "contentId", item.id
       template: """
         <ul class="small-block-grid-2 large-block-grid-2">
           <li ng-repeat="item in items">
-            <img ng-src="{{item.meta.thumb}}" ng-mouseover="notify(item)" />
+            <img ng-src="{{item.meta.thumb}}" ng-mouseover="container.notifier('read', item)" />
             <h5>{{item.title}}</h5>
             <p>
             {{item.content}}<br />[ <a ng-href="{{item.content}}">More Info</a> ]
@@ -21,26 +18,22 @@ app.directive "wlNews", [
           </li>
         </ul>
       """
+      link: (scope, element, attrs, ctrl) ->
+        scope.container = ctrl
+
     )
 ]
 
 # Skin directive for Video
 app.directive "wlVideo", [
-  "$compile"
-  "$injector"
   "$sce"
   "$log"
-  ($compile, $injector, $sce, $log) ->
+  ($sce, $log) ->
     return (
       restrict: "E"
+      require: "^wlContainer"
       scope:
         items: "="
-      link: (scope, element, attrs) ->
-        scope.trustSrc = (src) ->
-          $sce.trustAsResourceUrl(src)
-        scope.notify = (item) ->
-          $log.debug "Clicked on video #{item.id}"
-          scope.$emit "contextChanged", "contentId", item.id
       template: """
         <div ng-repeat="item in items">
             <h3>{{item.title}}</h3>
@@ -49,5 +42,9 @@ app.directive "wlVideo", [
             </div>
         </div>
       """
+      link: (scope, element, attrs, ctrl) ->
+        scope.container = ctrl
+        scope.trustSrc = (src) ->
+          $sce.trustAsResourceUrl(src)
     )
 ]

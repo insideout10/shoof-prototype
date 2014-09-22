@@ -117,7 +117,7 @@
       service.loadContainer = function(ctnOrigin) {
         var container, deferred;
         if (!ctnOrigin) {
-          $log.warn("Undefined origin within retrieveOrLoadDataStructureFor!");
+          $log.warn("Undefined origin: I cannot load any container!");
           return;
         }
         container = this._containers[ctnOrigin];
@@ -148,9 +148,19 @@
       return {
         restrict: "E",
         scope: {
-          uri: '@',
-          observe: '@',
-          stack: '='
+          uri: "@",
+          observe: "@",
+          stack: "="
+        },
+        controller: function($scope, $element, $attrs) {
+          var ctrl;
+          ctrl = {
+            notifier: function(action, item) {
+              $log.debug("" + action + "ing content " + item.id + "!");
+              return $scope.$emit("contextChanged", "contentId", item.id);
+            }
+          };
+          return ctrl;
         },
         link: function(scope, element, attrs) {
           var compiled, observers;
@@ -199,37 +209,33 @@
     "$log", function($log) {
       return {
         restrict: "E",
+        require: "^wlContainer",
         scope: {
           items: "="
         },
-        link: function(scope, element, attrs) {
-          return scope.notify = function(item) {
-            $log.debug("Clicked on video " + item.id);
-            return scope.$emit("contextChanged", "contentId", item.id);
-          };
-        },
-        template: "<ul class=\"small-block-grid-2 large-block-grid-2\">\n  <li ng-repeat=\"item in items\">\n    <img ng-src=\"{{item.meta.thumb}}\" ng-mouseover=\"notify(item)\" />\n    <h5>{{item.title}}</h5>\n    <p>\n    {{item.content}}<br />[ <a ng-href=\"{{item.content}}\">More Info</a> ]\n    </p>\n  </li>\n</ul>"
+        template: "<ul class=\"small-block-grid-2 large-block-grid-2\">\n  <li ng-repeat=\"item in items\">\n    <img ng-src=\"{{item.meta.thumb}}\" ng-mouseover=\"container.notifier('read', item)\" />\n    <h5>{{item.title}}</h5>\n    <p>\n    {{item.content}}<br />[ <a ng-href=\"{{item.content}}\">More Info</a> ]\n    </p>\n  </li>\n</ul>",
+        link: function(scope, element, attrs, ctrl) {
+          return scope.container = ctrl;
+        }
       };
     }
   ]);
 
   app.directive("wlVideo", [
-    "$compile", "$injector", "$sce", "$log", function($compile, $injector, $sce, $log) {
+    "$sce", "$log", function($sce, $log) {
       return {
         restrict: "E",
+        require: "^wlContainer",
         scope: {
           items: "="
         },
-        link: function(scope, element, attrs) {
-          scope.trustSrc = function(src) {
+        template: "<div ng-repeat=\"item in items\">\n    <h3>{{item.title}}</h3>\n    <div class=\"flex-video\">\n       <iframe ng-src=\"{{trustSrc(item.meta.videoURL)}}\" frameborder=\"0\" allowfullscreen></iframe>\n    </div>\n</div>",
+        link: function(scope, element, attrs, ctrl) {
+          scope.container = ctrl;
+          return scope.trustSrc = function(src) {
             return $sce.trustAsResourceUrl(src);
           };
-          return scope.notify = function(item) {
-            $log.debug("Clicked on video " + item.id);
-            return scope.$emit("contextChanged", "contentId", item.id);
-          };
-        },
-        template: "<div ng-repeat=\"item in items\">\n    <h3>{{item.title}}</h3>\n    <div class=\"flex-video\">\n       <iframe ng-src=\"{{trustSrc(item.meta.videoURL)}}\" frameborder=\"0\" allowfullscreen></iframe>\n    </div>\n</div>"
+        }
       };
     }
   ]);

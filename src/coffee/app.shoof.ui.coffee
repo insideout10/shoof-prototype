@@ -134,7 +134,7 @@ app.service "DataRetrieverService", [
     service.loadContainer = (ctnOrigin) ->
       # If ctnOrigin is undefined nothing to do
       unless ctnOrigin
-        $log.warn "Undefined origin within retrieveOrLoadDataStructureFor!"
+        $log.warn "Undefined origin: I cannot load any container!"
         return 
 
       container = @_containers[ctnOrigin]
@@ -175,9 +175,16 @@ app.directive "wlContainer", [
     return (
       restrict: "E"
       scope:
-        uri: '@'
-        observe: '@'
-        stack: '='
+        uri: "@"
+        observe: "@"
+        stack: "="
+      controller: ($scope, $element, $attrs) ->
+        ctrl = 
+          notifier: (action,item) ->
+            $log.debug "#{action}ing content #{item.id}!" 
+            # TODO replace this after ContextManager refactoring
+            $scope.$emit "contextChanged", "contentId", item.id 
+        ctrl
       link: (scope, element, attrs) ->
 
         compiled = false
