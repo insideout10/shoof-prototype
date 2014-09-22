@@ -121,7 +121,8 @@ app.service "DataRetrieverService", [
   "$http",
   "$log",
   "$rootScope",
-  ($http, $log, $rootScope) ->
+  "$q"
+  ($http, $log, $rootScope, $q) ->
     
     service = 
       _containers: {} 
@@ -143,15 +144,27 @@ app.service "DataRetrieverService", [
         return 
 
       container = @_containers[ctnOrigin]
-      $log.debug container
+      
       # If container is not in local storage load it remotely and return the $http promise
       unless container
-        $log.warn "Ctn #{ctnOrigin} missing: try to load it remotely"
-              
-        promise = $http.get ctnOrigin
-        return promise
-      # Otherwise returns the container itself
-      container
+        $log.warn "Ctn missing for #{ctnOrigin}. Try to load if from remote uri"
+      
+        deferred = $q.defer()
+        $http
+          method: 'GET' 
+          url: ctnOrigin
+          responseType: 'json'
+        .success (ctn) ->
+          # @_containers[ctnOrigin] = ctn
+          deferred.resolve ctn
+        
+        return deferred.promise
+      # Otherwise returns the container itself wrapped in a promise-like obj
+      # This trick allows wl-container to deal with this response with a single interface
+      return {
+        then: (callback) ->
+          callback.call container
+        }
     
     # loop containers and find container with type = containerType
     # find origins uri for that container
@@ -172,58 +185,50 @@ app.directive "wlContainer", [
         observe: '@'
       link: (scope, element, attrs) ->
 
+        compiled = false
+
         # Notify itself to the controller 
         observers = []
         if scope.observe
           observers = scope.observe.split(',')
 
         scope.$emit "containerAdded", scope.uri, observers
-        # Private function used to redraw the directive content
-        redraw = (currentOrigin)->
-          $log.debug "Going to redraw ctn #{scope.uri}"
-          template = """
-            <div class="row container-wrapper">
-              <p class="debug-box">Current container uri: <strong>#{currentOrigin}</strong></p>  
-              <wl-#{scope.container.skin} items="container.items"></wl-#{scope.container.skin}">
-            </div>"""
-          $log.debug scope.container
-          element.html(template).show()
-          $compile(element.contents()) scope
-          true
 
         # Observe chnages on stack property
         # If stack changes, contents need to be retrieved
         # If DataRetriever return a promise, the promise is executed
         # If the promise fails redrawing is aborted
-        scope.$watchCollection 'stack', (newStack, oldStack)->
+        # Notice: $watch with objectEquality enabled
+        # This could have performance side effects on complex obj comparison
+        # In this case we use on an object not so comples
+        # https://docs.angularjs.org/api/ng/type/$rootScope.Scope
+        # The alternative - $watchCollection - has a bug about new/olg value notification
+        scope.$watch 'stack', (newStack, oldStack)->
           
-          #$log.debug oldStack[scope.uri]
-          #$log.debug newStack[scope.uri]
-          
-          # if newStack[scope.uri] is oldStack[scope.uri]
-          #   $log.debug "Nothing to do indeed"
-          #   return
           currentOrigin = newStack[scope.uri]
+          
+          if compiled and oldStack[scope.uri] is currentOrigin
+             $log.debug "Nothing to do ctn #{scope.uri} indeed"
+             return
+
           $log.debug "Updating container #{scope.uri} with content from #{currentOrigin}"    
           
           # TODO $parent scope usage should be avoided
-          scope.container = scope.$parent.dataFor(currentOrigin)
-          $log.debug scope.container
-          unless scope.container
-            $log.warn "Content for ctn #{scope.uri} is missing"
-            return 
+          promise = scope.$parent.dataFor(currentOrigin)
+          promise.then (ctn) ->
+            scope.container = ctn
+            
+            template = """
+            <div class="row container-wrapper">
+              <p class="debug-box">Current container uri: <strong>#{currentOrigin}</strong></p>  
+              <wl-#{scope.container.skin} items="container.items"></wl-#{scope.container.skin}">
+            </div>"""
 
-          if scope.container.success?
-            scope.container.success (ctn) ->
-              # set the scope container equal to ctn response
-              scope.container = ctn
-              redraw(currentOrigin)
-            scope.container.error (response) ->
-              $log.warn "There was an issue trying to load ctn #{currentOrigin}. I restore the container"
-              scope.container = scope.$parent.dataFor(scope.uri)
-              redraw(scope.uri)  
-          else
-            redraw(currentOrigin) 
+            # TODO Try to find a smarter wat to redraw the container
+            element.html(template).show()
+            $compile(element.contents()) scope
+            compiled = true
+        , true
 
     )
 ]

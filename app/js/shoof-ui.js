@@ -102,7 +102,7 @@
   ]);
 
   app.service("DataRetrieverService", [
-    "$http", "$log", "$rootScope", function($http, $log, $rootScope) {
+    "$http", "$log", "$rootScope", "$q", function($http, $log, $rootScope, $q) {
       var service;
       service = {
         _containers: {}
@@ -118,19 +118,29 @@
         return _results;
       };
       service.retrieveOrLoadDataStructureFor = function(ctnOrigin) {
-        var container, promise;
+        var container, deferred;
         if (!ctnOrigin) {
           $log.warn("Undefined origin within retrieveOrLoadDataStructureFor!");
           return;
         }
         container = this._containers[ctnOrigin];
-        $log.debug(container);
         if (!container) {
-          $log.warn("Ctn " + ctnOrigin + " missing: try to load it remotely");
-          promise = $http.get(ctnOrigin);
-          return promise;
+          $log.warn("Ctn missing for " + ctnOrigin + ". Try to load if from remote uri");
+          deferred = $q.defer();
+          $http({
+            method: 'GET',
+            url: ctnOrigin,
+            responseType: 'json'
+          }).success(function(ctn) {
+            return deferred.resolve(ctn);
+          });
+          return deferred.promise;
         }
-        return container;
+        return {
+          then: function(callback) {
+            return callback.call(container);
+          }
+        };
       };
       return service;
     }
@@ -146,45 +156,31 @@
           observe: '@'
         },
         link: function(scope, element, attrs) {
-          var observers, redraw;
+          var compiled, observers;
+          compiled = false;
           observers = [];
           if (scope.observe) {
             observers = scope.observe.split(',');
           }
           scope.$emit("containerAdded", scope.uri, observers);
-          redraw = function(currentOrigin) {
-            var template;
-            $log.debug("Going to redraw ctn " + scope.uri);
-            template = "<div class=\"row container-wrapper\">\n  <p class=\"debug-box\">Current container uri: <strong>" + currentOrigin + "</strong></p>  \n  <wl-" + scope.container.skin + " items=\"container.items\"></wl-" + scope.container.skin + "\">\n</div>";
-            $log.debug(scope.container);
-            element.html(template).show();
-            $compile(element.contents())(scope);
-            return true;
-          };
-          return scope.$watchCollection('stack', function(newStack, oldStack) {
-            var currentOrigin;
+          return scope.$watch('stack', function(newStack, oldStack) {
+            var currentOrigin, promise;
             currentOrigin = newStack[scope.uri];
-            $log.debug("Updating container " + scope.uri + " with content from " + currentOrigin);
-            scope.container = scope.$parent.dataFor(currentOrigin);
-            $log.debug(scope.container);
-            if (!scope.container) {
-              $log.warn("Content for ctn " + scope.uri + " is missing");
+            if (compiled && oldStack[scope.uri] === currentOrigin) {
+              $log.debug("Nothing to do ctn " + scope.uri + " indeed");
               return;
             }
-            if (scope.container.success != null) {
-              scope.container.success(function(ctn) {
-                scope.container = ctn;
-                return redraw(currentOrigin);
-              });
-              return scope.container.error(function(response) {
-                $log.warn("There was an issue trying to load ctn " + currentOrigin + ". I restore the container");
-                scope.container = scope.$parent.dataFor(scope.uri);
-                return redraw(scope.uri);
-              });
-            } else {
-              return redraw(currentOrigin);
-            }
-          });
+            $log.debug("Updating container " + scope.uri + " with content from " + currentOrigin);
+            promise = scope.$parent.dataFor(currentOrigin);
+            return promise.then(function(ctn) {
+              var template;
+              scope.container = ctn;
+              template = "<div class=\"row container-wrapper\">\n  <p class=\"debug-box\">Current container uri: <strong>" + currentOrigin + "</strong></p>  \n  <wl-" + scope.container.skin + " items=\"container.items\"></wl-" + scope.container.skin + "\">\n</div>";
+              element.html(template).show();
+              $compile(element.contents())(scope);
+              return compiled = true;
+            });
+          }, true);
         }
       };
     }
