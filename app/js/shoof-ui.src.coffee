@@ -33,12 +33,6 @@ app.controller "ShoofCtrl", [
       # TODO Investigate about: it seems to berequired an explicit $digist() execution here 
       $scope.$digest()
 
-    # Retrieve container data trough a container uri / origin
-    # Data retrieving is delegated to DataRetrieverService
-    $scope.dataFor = (ctnOrigin) ->
-      DataRetrieverService.retrieveOrLoadDataStructureFor(ctnOrigin)
-
-
     # Test fn
     $scope.submit = () ->
       $log.debug "submit"
@@ -137,7 +131,7 @@ app.service "DataRetrieverService", [
     # retrieve data for a container with uri ctnOrigin
     # if it's presente in containers local storage @_containers return it
     # Otherwise try to retrieve by $http
-    service.retrieveOrLoadDataStructureFor = (ctnOrigin) ->
+    service.loadContainer = (ctnOrigin) ->
       # If ctnOrigin is undefined nothing to do
       unless ctnOrigin
         $log.warn "Undefined origin within retrieveOrLoadDataStructureFor!"
@@ -174,15 +168,16 @@ app.service "DataRetrieverService", [
 
 # Generic container directive
 app.directive "wlContainer", [
+  "DataRetrieverService"
   "$compile"
   "$log"
-  ($compile, $log) ->
+  (DataRetrieverService, $compile, $log) ->
     return (
       restrict: "E"
       scope:
         uri: '@'
-        stack: '='
         observe: '@'
+        stack: '='
       link: (scope, element, attrs) ->
 
         compiled = false
@@ -195,14 +190,12 @@ app.directive "wlContainer", [
         scope.$emit "containerAdded", scope.uri, observers
 
         # Observe chnages on stack property
-        # If stack changes, contents need to be retrieved
-        # If DataRetriever return a promise, the promise is executed
-        # If the promise fails redrawing is aborted
-        # Notice: $watch with objectEquality enabled
+        # When stack changes, contents has to be loaded / re-loaded
+        # Notice: $watch is used with objectEquality enabled
         # This could have performance side effects on complex obj comparison
-        # In this case we use on an object not so comples
+        # In this case we decided to use it becouse the stack object is simple enough
         # https://docs.angularjs.org/api/ng/type/$rootScope.Scope
-        # The alternative - $watchCollection - has a bug about new/olg value notification
+        # The alternative - $watchCollection - has a bug about new/old value notification
         scope.$watch 'stack', (newStack, oldStack)->
           
           currentOrigin = newStack[scope.uri]
@@ -213,8 +206,7 @@ app.directive "wlContainer", [
 
           $log.debug "Updating container #{scope.uri} with content from #{currentOrigin}"    
           
-          # TODO $parent scope usage should be avoided
-          promise = scope.$parent.dataFor(currentOrigin)
+          promise = DataRetrieverService.loadContainer currentOrigin
           promise.then (ctn) ->
             scope.container = ctn
             

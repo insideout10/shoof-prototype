@@ -24,9 +24,6 @@
         $scope.stack[ctnOrigin] = ctnOrigin;
         return $scope.$digest();
       });
-      $scope.dataFor = function(ctnOrigin) {
-        return DataRetrieverService.retrieveOrLoadDataStructureFor(ctnOrigin);
-      };
       $scope.submit = function() {
         $log.debug("submit");
         return $rootScope.$broadcast("contextChanged", $scope.contextProperty, $scope.contextPropertyValue);
@@ -117,7 +114,7 @@
         }
         return _results;
       };
-      service.retrieveOrLoadDataStructureFor = function(ctnOrigin) {
+      service.loadContainer = function(ctnOrigin) {
         var container, deferred;
         if (!ctnOrigin) {
           $log.warn("Undefined origin within retrieveOrLoadDataStructureFor!");
@@ -147,13 +144,13 @@
   ]);
 
   app.directive("wlContainer", [
-    "$compile", "$log", function($compile, $log) {
+    "DataRetrieverService", "$compile", "$log", function(DataRetrieverService, $compile, $log) {
       return {
         restrict: "E",
         scope: {
           uri: '@',
-          stack: '=',
-          observe: '@'
+          observe: '@',
+          stack: '='
         },
         link: function(scope, element, attrs) {
           var compiled, observers;
@@ -171,7 +168,7 @@
               return;
             }
             $log.debug("Updating container " + scope.uri + " with content from " + currentOrigin);
-            promise = scope.$parent.dataFor(currentOrigin);
+            promise = DataRetrieverService.loadContainer(currentOrigin);
             return promise.then(function(ctn) {
               var template;
               scope.container = ctn;
