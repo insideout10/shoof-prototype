@@ -2,7 +2,7 @@
   var app,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  app = angular.module("shoof.ui", ["ngRoute", "famous.angular"]);
+  app = angular.module("shoof.ui", ["famous.angular", "ngRoute"]);
 
   app.controller("ShoofCtrl", [
     "ContextManagerService", "DataRetrieverService", "$scope", "$rootScope", "$log", function(ContextManagerService, DataRetrieverService, $scope, $rootScope, $log) {
