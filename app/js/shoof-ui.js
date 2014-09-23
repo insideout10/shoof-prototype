@@ -1,10 +1,7 @@
 (function() {
-  var app,
-    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+  var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  app = angular.module("shoof.ui", ["famous.angular", "ngRoute"]);
-
-  app.provider("storage", function() {
+  angular.module("wordlift.containers.engine", []).provider("storage", function() {
     var containers;
     containers = void 0;
     return {
@@ -17,13 +14,9 @@
         };
       }
     };
-  });
-
-  app.config(function(storageProvider) {
+  }).config(function(storageProvider) {
     return storageProvider.setContainers(window.containers);
-  });
-
-  app.controller("ShoofCtrl", [
+  }).controller("wlContainersEngineCtrl", [
     "ContextManagerService", "DataRetrieverService", "$scope", "$rootScope", "$log", "storage", function(ContextManagerService, DataRetrieverService, $scope, $rootScope, $log, storage) {
       var ctn, uri, _ref;
       $scope.stack = {};
@@ -56,9 +49,7 @@
         return $scope.contextPropertyValue = void 0;
       };
     }
-  ]);
-
-  app.service("ContextManagerService", [
+  ]).service("ContextManagerService", [
     "$log", function($log) {
       var service;
       service = {
@@ -116,9 +107,7 @@
       };
       return service;
     }
-  ]);
-
-  app.service("DataRetrieverService", [
+  ]).service("DataRetrieverService", [
     "$http", "$log", "$rootScope", "$q", "storage", function($http, $log, $rootScope, $q, storage) {
       var service;
       service = {
@@ -155,9 +144,7 @@
       };
       return service;
     }
-  ]);
-
-  app.directive("wlContainer", [
+  ]).directive("wlContainer", [
     "DataRetrieverService", "$compile", "$log", function(DataRetrieverService, $compile, $log) {
       return {
         restrict: "E",
@@ -207,12 +194,7 @@
     }
   ]);
 
-  $(document).ready(function() {
-    var injector;
-    return injector = angular.bootstrap(document, ["shoof.ui"]);
-  });
-
-  app.directive("wlNews", [
+  angular.module("wordlift.ui.skins.foundation", ["wordlift.containers.engine"]).directive("wlNews", [
     "$log", function($log) {
       return {
         restrict: "E",
@@ -226,9 +208,7 @@
         }
       };
     }
-  ]);
-
-  app.directive("wlVideo", [
+  ]).directive("wlVideo", [
     "$sce", "$log", function($sce, $log) {
       return {
         restrict: "E",
@@ -242,6 +222,22 @@
           return scope.trustSrc = function(src) {
             return $sce.trustAsResourceUrl(src);
           };
+        }
+      };
+    }
+  ]);
+
+  angular.module("wordlift.ui.skins.famous", ["famous.angular", "ngRoute", "wordlift.containers.engine"]).directive("wlNews", [
+    "$log", function($log) {
+      return {
+        restrict: "E",
+        require: "^wlContainer",
+        scope: {
+          items: "="
+        },
+        template: "<fa-app style=\"height: 200px\">\n  <fa-surface fa-background-color=\"'red'\">Hello world</fa-surface>\n</fa-app>",
+        link: function(scope, element, attrs, ctrl) {
+          return scope.container = ctrl;
         }
       };
     }

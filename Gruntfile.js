@@ -13,7 +13,14 @@ module.exports = function(grunt) {
             			'src/coffee/app.shoof.ui.coffee',
             			'src/coffee/app.shoof.ui.skins.coffee',
             			'src/coffee/app.shoof.ui.skins.famous.coffee'
+          			],
+          			'app/js/foundation-starter.js': [
+            			'src/coffee/starters/foundation.coffee'
+          			],
+          			'app/js/famous-starter.js': [
+            			'src/coffee/starters/famous.coffee'
           			]
+ 
           		}
           	}
         },

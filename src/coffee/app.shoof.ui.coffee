@@ -1,7 +1,12 @@
-# Test mock prototype
-app = angular.module("shoof.ui", ["famous.angular", "ngRoute"])
 
-app.provider("storage", () ->
+# Define the Wordlift Containers Engine
+# Here is the core logic for containers rendering
+# Skins are managed as separated modules
+angular.module("wordlift.containers.engine", [])
+
+# Define a custom storageProvider used to inject 
+# window.containers within the app boot / configuration
+.provider("storage", () ->
   containers = undefined
   return {
     setContainers: (cnts) ->
@@ -12,13 +17,13 @@ app.provider("storage", () ->
       }
   }
 )
-
-app.config((storageProvider) ->
+# Provide configuration for the app, depending from in page containers
+.config((storageProvider) ->
   storageProvider.setContainers window.containers
 )
-
-# UiCtrl manage communications between skins, context and data retriever
-app.controller "ShoofCtrl", [
+# wlContainersCtrl manage communications between 
+# wlContainer directives, ContextManagerService and DataRetriverService
+.controller("wlContainersEngineCtrl", [
   "ContextManagerService"
   "DataRetrieverService"
   "$scope"
@@ -45,11 +50,11 @@ app.controller "ShoofCtrl", [
       $scope.stack[ctnOrigin] = ctnOrigin
       $scope.observers[ctnOrigin] = ctnObserver
 
-    # Test fn
+    # Test fn: TO BE REMOVED
     $scope.submit = () ->
       $log.debug "submit"
       $rootScope.$broadcast "contextChanged", $scope.contextProperty, $scope.contextPropertyValue 
-     # Test fn
+     # Test fn TO BE REMOVED
     $scope.reset = () ->
       $log.debug "reset"
       ContextManagerService.resetContext()
@@ -57,15 +62,14 @@ app.controller "ShoofCtrl", [
       $scope.contextProperty = undefined
       $scope.contextPropertyValue = undefined
 
-]
-
+])
 # Represents and manage the Context
 # The context is made up a set of key / value properties
 # @_allowedProperties define which properties are allowed within the context definition
 # The current context can be outputed as a querystring fragment
 # Append this fragment to an existing uri means 
 # to apply a context to an existing container, genereting a new container reference 
-app.service "ContextManagerService", [
+.service("ContextManagerService", [
   "$log", 
   ($log) ->
   
@@ -118,12 +122,11 @@ app.service "ContextManagerService", [
       @_context = {}
 
     service
-]
-
+])
 # Data retrieving specilized service
 # Store containers content in @_containers
 # If a data structure is missing try to load from remote
-app.service "DataRetrieverService", [
+.service("DataRetrieverService", [
   "$http",
   "$log",
   "$rootScope",
@@ -171,10 +174,9 @@ app.service "DataRetrieverService", [
     # find origins uri for that container
     # retrieve related data objs and return them
     service
-]
-
+])
 # Generic container directive
-app.directive "wlContainer", [
+.directive "wlContainer", [
   "DataRetrieverService"
   "$compile"
   "$log"
@@ -239,11 +241,6 @@ app.directive "wlContainer", [
     )
 ]
 
-# Define window.containers: it's the storage for in-page loaded containers
-#window.containers = {}
-# Once the page is loaded, angula app is bootstraped
-$( document ).ready ()->
-  injector = angular.bootstrap(document, ["shoof.ui"])
 
 
 

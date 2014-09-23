@@ -1,5 +1,6 @@
 # Sample skin directive for news
-app.directive "wlNews", [
+angular.module("wordlift.ui.skins.foundation", ["wordlift.containers.engine"])
+.directive "wlNews", [
   "$log"
   ($log) ->
     return (
@@ -23,9 +24,8 @@ app.directive "wlNews", [
 
     )
 ]
-
 # Skin directive for Video
-app.directive "wlVideo", [
+.directive "wlVideo", [
   "$sce"
   "$log"
   ($sce, $log) ->

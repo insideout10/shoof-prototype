@@ -2,28 +2,26 @@
 <html>
 <head>
 
-<link href="/bower_components/foundation/css/normalize.css" rel="stylesheet" type="text/css" />
-<link href="/bower_components/foundation/css/foundation.css" rel="stylesheet" type="text/css" />
+<link href="../bower_components/foundation/css/normalize.css" rel="stylesheet" type="text/css" />
+<link href="../bower_components/foundation/css/foundation.css" rel="stylesheet" type="text/css" />
 <link rel="stylesheet" href="../bower_components/famous-angular/dist/famous-angular.css">
 
-<script src="/bower_components/foundation/js/vendor/jquery.js"></script>
-<script src="/bower_components/foundation/js/foundation.min.js"></script>
-<!-- <script src="/bower_components/requirejs/require.js"></script> -->
-<script src="/bower_components/angular/angular.min.js"></script>
-<script src="/bower_components/angular-route/angular-route.js"></script>
-<script src="/bower_components/underscore/underscore.js"></script>
-<script src="/bower_components/famous/famous-global.js"></script>
-<script src="/bower_components/famous-angular/dist/famous-angular.js"></script>
-<!--<script>
-    //set requirejs's base to where the famous lib folder lives
-    require.config({baseUrl: '../bower_components'});
-</script>-->
+<script src="../bower_components/foundation/js/vendor/jquery.js"></script>
+<script src="../bower_components/foundation/js/foundation.min.js"></script>
+<script src="../bower_components/angular/angular.min.js"></script>
+<script src="../bower_components/angular-route/angular-route.js"></script>
+<script src="../bower_components/underscore/underscore.js"></script>
+<script src="../bower_components/famous/famous-global.js"></script>
+<script src="../bower_components/famous-angular/dist/famous-angular.js"></script>
+
 <script src="js/shoof-ui.js"></script>
 <link href="css/shoof.ui.css" rel="stylesheet" type="text/css">
+<script src="js/famous-starter.js"></script>
+
   <meta charset="utf-8">
   <title>Mico SC-02 frontend prototype</title>
 </head>
-<body ng-controller="ShoofCtrl">
+<body ng-controller="wlContainersEngineCtrl">
   
   <div class="row">
     <div class="large-12 columns">
@@ -100,10 +98,6 @@ window.containers['data/Video.json'] = {
     </div>
     </div>
   </div>
-  
-
-<fa-app style="height: 200px"><fa-surface fa-background-color="'red'">Hello world</fa-surface></fa-app>
-
    
 </body>
 </html>
