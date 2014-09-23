@@ -9,10 +9,18 @@ module.exports = function(grunt) {
           			sourceMap: true
       			},
         		files: {
-          			'app/js/shoof-ui.js': [
-            			'src/coffee/app.shoof.ui.coffee',
-            			'src/coffee/app.shoof.ui.skins.coffee'
+          			'app/js/wordlift-containers.js': [
+            			'src/coffee/app.wordlift.containers.engine.coffee',
+            			'src/coffee/app.wordlift.ui.skins.famous.coffee',
+            			'src/coffee/app.wordlift.ui.skins.foundation.coffee'
+          			],
+          			'app/js/foundation-starter.js': [
+            			'src/coffee/starters/foundation.coffee'
+          			],
+          			'app/js/famous-starter.js': [
+            			'src/coffee/starters/famous.coffee'
           			]
+ 
           		}
           	}
         },
@@ -26,11 +34,15 @@ module.exports = function(grunt) {
 		},
 		cssmin: {
   			minify: {
-    			src: 'app/css/app.shoof.ui.css',
-   				dest: 'app/css/app.shoof.ui.min.css'
+    			src: 'src/scss/wordlift-containers.scss',
+   				dest: 'app/css/wordlift-containers.min.css'
   			}
 		},
 		watch: {
+			compass: {
+				files: ['**/*.{scss}'],
+       			tasks: ['compass:dev']
+			},
 			css: {
 				files: 'src/scss/*.scss',
 				tasks: ['compass']
@@ -40,7 +52,7 @@ module.exports = function(grunt) {
     			tasks: 'coffee'
   			},
   			cssmin: {
-  				files: ['app/css/shoof.ui.css'],
+  				files: ['app/css/wordlift-containers.css'],
   				tasks: ['cssmin']
 			}
 		}

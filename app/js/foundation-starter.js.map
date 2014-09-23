@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "foundation-starter.js",
+  "sourceRoot": "../../src/coffee/starters/",
+  "sources": [
+    "foundation.coffee"
+  ],
+  "names": [],
+  "mappings": "AACA;AAAA,EAAA,MAAM,CAAC,UAAP,GAAoB,EAApB,CAAA;;AAAA,EAEA,CAAA,CAAG,QAAH,CAAa,CAAC,KAAd,CAAoB,SAAA,GAAA;AAClB,QAAA,QAAA;AAAA,IAAA,OAAO,CAAC,MAAR,CAAe,mBAAf,EAAmC,CAAC,8BAAD,CAAnC,CAAA,CAAA;WACA,QAAA,GAAW,OAAO,CAAC,SAAR,CAAkB,QAAlB,EAA4B,CAAC,mBAAD,CAA5B,EAFO;EAAA,CAApB,CAFA,CAAA;AAAA"
+}
