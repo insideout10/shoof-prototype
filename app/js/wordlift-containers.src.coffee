@@ -45,9 +45,18 @@ angular.module("wordlift.containers.engine", [])
       for id, origin of $scope.stack  
         $scope.stack[id] = id
     
+#    # Everytime the context changes the stack need to be update accordingly
+#    $rootScope.$on "contextChanged", (event, property, value) ->
+#      if ContextManagerService.addProperty property, value
+#        $log.info "Context updated! Let's update the page stack accordingly!"
+#        for id, origin of $scope.stack    
+#          newOrigin = ContextManagerService.rewriteOrigin id, $scope.observers[id]
+#          $log.debug "From #{id} to #{newOrigin}"
+#          $scope.stack[id] = newOrigin
+
     # Everytime the context changes the stack need to be update accordingly
-    $rootScope.$on "contextChanged", (event, property, value) ->
-      if ContextManagerService.addProperty property, value
+    $rootScope.$on "notifyUserInteraction", (event, action, item) ->
+        ContextManagerService.trackUserInteraction action, item
         $log.info "Context updated! Let's update the page stack accordingly!"
         for id, origin of $scope.stack    
           newOrigin = ContextManagerService.rewriteOrigin id, $scope.observers[id]
@@ -80,23 +89,28 @@ angular.module("wordlift.containers.engine", [])
 # to apply a context to an existing container, genereting a new container reference 
 .service("ContextManagerService", [
   "$log", 
-  ($log) ->
+  "$window",
+  ($log, $window) ->
   
     service =
-      _context: {}
-      # Just a fake property
-      _allowedProperties: ['contentId', 'userId']
-    
+      _context: {
+        userProperties:[]
+        userInteractions:[]
+        lastInteractionItemId: ()->
+          interaction = @userInteractions[..].pop()
+          interaction.item.id
+      }
+
     # Returns the current context
     service.getContext = ->
       @_context
-    # Add a property to the current context, just if the parameter is allowed to be used  
-    service.addProperty = (property, value)->
-      unless property in @_allowedProperties
-        $log.warn "ContextManager does not allow property #{property}"
-        return false 
-
-      @_context[property] = value
+    # Track a user interaction  
+    service.trackUserInteraction = (a, i)->   
+      @_context.userInteractions.push { action: a, item: i }  
+      # notify the action trough a GA event
+      # https://developers.google.com/analytics/devguides/collection/analyticsjs/events?hl=it
+      $log.debug "Goingo to notify userInteraction to analytics!"
+      $window.ga? "send", "event", "userInteraction", action, item.id
       true
 
     # Rewrite origin means append the context to the origin
@@ -104,9 +118,8 @@ angular.module("wordlift.containers.engine", [])
     service.rewriteOrigin = (origin, observers)->
       newUrl = ""
       chunks = []
-      for property in @_allowedProperties
-        if @_context[property] and (property in observers)
-          chunks.push "#{property}=#{@_context[property]}"
+      if "contentId" in observers
+        chunks.push "contentId=#{@_context.lastInteractionItemId()}"
       if chunks.length > 0
         newUrl = "---#{chunks.join('')}.json"
       else
@@ -188,7 +201,7 @@ angular.module("wordlift.containers.engine", [])
           notifier: (action,item) ->
             $log.debug "#{action}ing content #{item.id}!" 
             # TODO replace this after ContextManager refactoring
-            $scope.$emit "contextChanged", "contentId", item.id 
+            $scope.$emit "notifyUserInteraction", action, item 
         ctrl
       link: (scope, element, attrs) ->
 

@@ -37,20 +37,19 @@
         }
         return _results;
       };
-      $rootScope.$on("contextChanged", function(event, property, value) {
+      $rootScope.$on("notifyUserInteraction", function(event, action, item) {
         var id, newOrigin, origin, _ref1, _results;
-        if (ContextManagerService.addProperty(property, value)) {
-          $log.info("Context updated! Let's update the page stack accordingly!");
-          _ref1 = $scope.stack;
-          _results = [];
-          for (id in _ref1) {
-            origin = _ref1[id];
-            newOrigin = ContextManagerService.rewriteOrigin(id, $scope.observers[id]);
-            $log.debug("From " + id + " to " + newOrigin);
-            _results.push($scope.stack[id] = newOrigin);
-          }
-          return _results;
+        ContextManagerService.trackUserInteraction(action, item);
+        $log.info("Context updated! Let's update the page stack accordingly!");
+        _ref1 = $scope.stack;
+        _results = [];
+        for (id in _ref1) {
+          origin = _ref1[id];
+          newOrigin = ContextManagerService.rewriteOrigin(id, $scope.observers[id]);
+          $log.debug("From " + id + " to " + newOrigin);
+          _results.push($scope.stack[id] = newOrigin);
         }
+        return _results;
       });
       $rootScope.$on("containerAdded", function(event, ctnOrigin, ctnObserver) {
         $log.debug("Added ctn " + ctnOrigin + " reactive to " + ctnObserver);
@@ -70,33 +69,39 @@
       };
     }
   ]).service("ContextManagerService", [
-    "$log", function($log) {
+    "$log", "$window", function($log, $window) {
       var service;
       service = {
-        _context: {},
-        _allowedProperties: ['contentId', 'userId']
+        _context: {
+          userProperties: [],
+          userInteractions: [],
+          lastInteractionItemId: function() {
+            var interaction;
+            interaction = this.userInteractions.slice(0).pop();
+            return interaction.item.id;
+          }
+        }
       };
       service.getContext = function() {
         return this._context;
       };
-      service.addProperty = function(property, value) {
-        if (__indexOf.call(this._allowedProperties, property) < 0) {
-          $log.warn("ContextManager does not allow property " + property);
-          return false;
+      service.trackUserInteraction = function(a, i) {
+        this._context.userInteractions.push({
+          action: a,
+          item: i
+        });
+        $log.debug("Goingo to notify userInteraction to analytics!");
+        if (typeof $window.ga === "function") {
+          $window.ga("send", "event", "userInteraction", action, item.id);
         }
-        this._context[property] = value;
         return true;
       };
       service.rewriteOrigin = function(origin, observers) {
-        var chunks, newUrl, property, _i, _len, _ref;
+        var chunks, newUrl;
         newUrl = "";
         chunks = [];
-        _ref = this._allowedProperties;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          property = _ref[_i];
-          if (this._context[property] && (__indexOf.call(observers, property) >= 0)) {
-            chunks.push("" + property + "=" + this._context[property]);
-          }
+        if (__indexOf.call(observers, "contentId") >= 0) {
+          chunks.push("contentId=" + (this._context.lastInteractionItemId()));
         }
         if (chunks.length > 0) {
           newUrl = "---" + (chunks.join('')) + ".json";
@@ -160,7 +165,7 @@
           ctrl = {
             notifier: function(action, item) {
               $log.debug("" + action + "ing content " + item.id + "!");
-              return $scope.$emit("contextChanged", "contentId", item.id);
+              return $scope.$emit("notifyUserInteraction", action, item);
             }
           };
           return ctrl;
