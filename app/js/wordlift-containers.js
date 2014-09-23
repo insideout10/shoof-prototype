@@ -1,7 +1,7 @@
 (function() {
   var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  angular.module("wordlift.containers.engine", []).provider("storage", function() {
+  angular.module("wordlift.containers.engine", ["geolocation"]).provider("storage", function() {
     var containers;
     containers = void 0;
     return {
@@ -17,10 +17,16 @@
   }).config(function(storageProvider) {
     return storageProvider.setContainers(window.containers);
   }).controller("wlContainersEngineCtrl", [
-    "ContextManagerService", "DataRetrieverService", "$scope", "$rootScope", "$log", "storage", function(ContextManagerService, DataRetrieverService, $scope, $rootScope, $log, storage) {
+    "ContextManagerService", "DataRetrieverService", "$scope", "$rootScope", "$log", "storage", "geolocation", function(ContextManagerService, DataRetrieverService, $scope, $rootScope, $log, storage, geolocation) {
       var ctn, uri, _ref;
       $scope.stack = {};
       $scope.observers = {};
+      geolocation.getLocation().then(function(data) {
+        $log.info("User location detected: longitude " + data.coords.longitude + " latitude " + data.coords.latitude);
+        ContextManagerService.addUserProperty("lat", data.coords.latitude);
+        ContextManagerService.addUserProperty("lng", data.coords.longitude);
+        return $scope.updateStack();
+      });
       $scope.context = ContextManagerService.getContext();
       _ref = storage.containers;
       for (uri in _ref) {
@@ -37,10 +43,9 @@
         }
         return _results;
       };
-      $rootScope.$on("notifyUserInteraction", function(event, action, item) {
+      $scope.updateStack = function() {
         var id, newOrigin, origin, _ref1, _results;
-        ContextManagerService.trackUserInteraction(action, item);
-        $log.info("Context updated! Let's update the page stack accordingly!");
+        $log.debug("updateStack");
         _ref1 = $scope.stack;
         _results = [];
         for (id in _ref1) {
@@ -50,23 +55,17 @@
           _results.push($scope.stack[id] = newOrigin);
         }
         return _results;
+      };
+      $rootScope.$on("notifyUserInteraction", function(event, action, item) {
+        ContextManagerService.trackUserInteraction(action, item);
+        $log.info("Context updated! Let's update the page stack accordingly!");
+        return $scope.updateStack();
       });
-      $rootScope.$on("containerAdded", function(event, ctnOrigin, ctnObserver) {
+      return $rootScope.$on("containerAdded", function(event, ctnOrigin, ctnObserver) {
         $log.debug("Added ctn " + ctnOrigin + " reactive to " + ctnObserver);
         $scope.stack[ctnOrigin] = ctnOrigin;
         return $scope.observers[ctnOrigin] = ctnObserver;
       });
-      $scope.submit = function() {
-        $log.debug("submit");
-        return $rootScope.$broadcast("contextChanged", $scope.contextProperty, $scope.contextPropertyValue);
-      };
-      return $scope.reset = function() {
-        $log.debug("reset");
-        ContextManagerService.resetContext();
-        $scope.resetStack();
-        $scope.contextProperty = void 0;
-        return $scope.contextPropertyValue = void 0;
-      };
     }
   ]).service("ContextManagerService", [
     "$log", "$window", function($log, $window) {
@@ -74,41 +73,44 @@
       service = {
         _context: {
           userProperties: [],
-          userInteractions: [],
-          lastInteractionItemId: function() {
-            var interaction;
-            interaction = this.userInteractions.slice(0).pop();
-            return interaction.item.id;
-          }
+          userInteractions: {}
         }
       };
       service.getContext = function() {
         return this._context;
       };
-      service.trackUserInteraction = function(a, i) {
-        this._context.userInteractions.push({
-          action: a,
-          item: i
-        });
-        $log.debug("Goingo to notify userInteraction to analytics!");
+      service.addUserProperty = function(k, v) {
+        return this._context.userProperties.push([k, v]);
+      };
+      service.trackUserInteraction = function(action, item) {
+        this._context.userInteractions = {
+          'action': action,
+          'item': item
+        };
+        $log.debug("Going to notify userInteraction to analytics!");
         if (typeof $window.ga === "function") {
           $window.ga("send", "event", "userInteraction", action, item.id);
         }
         return true;
       };
       service.rewriteOrigin = function(origin, observers) {
-        var chunks, newUrl;
-        newUrl = "";
+        var chunks, property, _i, _len, _ref;
         chunks = [];
-        if (__indexOf.call(observers, "contentId") >= 0) {
-          chunks.push("contentId=" + (this._context.lastInteractionItemId()));
+        if (__indexOf.call(observers, "userProperties") >= 0) {
+          _ref = this._context.userProperties;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            property = _ref[_i];
+            chunks.push(property.join('='));
+          }
+        }
+        if (__indexOf.call(observers, "userInteractions") >= 0 && this._context.userInteractions.item) {
+          chunks.push(["contentId", this._context.userInteractions.item.id].join('='));
         }
         if (chunks.length > 0) {
-          newUrl = "---" + (chunks.join('')) + ".json";
-        } else {
-          newUrl = ".json";
+          origin = origin.replace(".json", "---" + (chunks.join('&')) + ".json");
+          return origin;
         }
-        return origin.replace(".json", newUrl);
+        return origin;
       };
       service.resetContext = function() {
         return this._context = {};
@@ -157,7 +159,7 @@
         restrict: "E",
         scope: {
           uri: "@",
-          observe: "@",
+          listening: "@",
           stack: "="
         },
         controller: function($scope, $element, $attrs) {
@@ -174,8 +176,8 @@
           var compiled, observers;
           compiled = false;
           observers = [];
-          if (scope.observe) {
-            observers = scope.observe.split(',');
+          if (scope.listening) {
+            observers = scope.listening.split(',');
           }
           scope.$emit("containerAdded", scope.uri, observers);
           return scope.$watch('stack', function(newStack, oldStack) {

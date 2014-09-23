@@ -2,7 +2,7 @@
 # Define the Wordlift Containers Engine
 # Here is the core logic for containers rendering
 # Skins are managed as separated modules
-angular.module("wordlift.containers.engine", [])
+angular.module("wordlift.containers.engine", ["geolocation"])
 
 # Define a custom storageProvider used to inject 
 # window.containers within the app boot / configuration
@@ -30,11 +30,19 @@ angular.module("wordlift.containers.engine", [])
   "$rootScope"
   "$log"
   "storage"
-  (ContextManagerService, DataRetrieverService, $scope, $rootScope, $log, storage) ->
+  "geolocation"
+  (ContextManagerService, DataRetrieverService, $scope, $rootScope, $log, storage, geolocation) ->
     
     $scope.stack = {}    
     $scope.observers = {}    
     
+    # Retrieve coords for corrent user and pass them to ContextManager
+    geolocation.getLocation().then (data) ->
+      $log.info "User location detected: longitude #{data.coords.longitude} latitude #{data.coords.latitude}"
+      ContextManagerService.addUserProperty "lat", data.coords.latitude
+      ContextManagerService.addUserProperty "lng", data.coords.longitude  
+      $scope.updateStack()  
+
     $scope.context = ContextManagerService.getContext()
     
     for uri, ctn of storage.containers
@@ -44,42 +52,24 @@ angular.module("wordlift.containers.engine", [])
     $scope.resetStack = ()->
       for id, origin of $scope.stack  
         $scope.stack[id] = id
-    
-#    # Everytime the context changes the stack need to be update accordingly
-#    $rootScope.$on "contextChanged", (event, property, value) ->
-#      if ContextManagerService.addProperty property, value
-#        $log.info "Context updated! Let's update the page stack accordingly!"
-#        for id, origin of $scope.stack    
-#          newOrigin = ContextManagerService.rewriteOrigin id, $scope.observers[id]
-#          $log.debug "From #{id} to #{newOrigin}"
-#          $scope.stack[id] = newOrigin
+    # Update the page stack
+    $scope.updateStack = ()->
+      $log.debug "updateStack"
+      for id, origin of $scope.stack    
+        newOrigin = ContextManagerService.rewriteOrigin id, $scope.observers[id]
+        $log.debug "From #{id} to #{newOrigin}"
+        $scope.stack[id] = newOrigin
 
     # Everytime the context changes the stack need to be update accordingly
     $rootScope.$on "notifyUserInteraction", (event, action, item) ->
         ContextManagerService.trackUserInteraction action, item
         $log.info "Context updated! Let's update the page stack accordingly!"
-        for id, origin of $scope.stack    
-          newOrigin = ContextManagerService.rewriteOrigin id, $scope.observers[id]
-          $log.debug "From #{id} to #{newOrigin}"
-          $scope.stack[id] = newOrigin
+        $scope.updateStack()
 
     $rootScope.$on "containerAdded", (event, ctnOrigin, ctnObserver) ->
       $log.debug "Added ctn #{ctnOrigin} reactive to #{ctnObserver}"
       $scope.stack[ctnOrigin] = ctnOrigin
       $scope.observers[ctnOrigin] = ctnObserver
-
-    # Test fn: TO BE REMOVED
-    $scope.submit = () ->
-      $log.debug "submit"
-      $rootScope.$broadcast "contextChanged", $scope.contextProperty, $scope.contextPropertyValue 
-     # Test fn TO BE REMOVED
-    $scope.reset = () ->
-      $log.debug "reset"
-      ContextManagerService.resetContext()
-      $scope.resetStack()
-      $scope.contextProperty = undefined
-      $scope.contextPropertyValue = undefined
-
 ])
 # Represents and manage the Context
 # The context is made up a set of key / value properties
@@ -91,41 +81,51 @@ angular.module("wordlift.containers.engine", [])
   "$log", 
   "$window",
   ($log, $window) ->
-  
+    
     service =
-      _context: {
-        userProperties:[]
-        userInteractions:[]
-        lastInteractionItemId: ()->
-          interaction = @userInteractions[..].pop()
-          interaction.item.id
-      }
-
+      _context: 
+        userProperties: []
+        userInteractions: {}
     # Returns the current context
     service.getContext = ->
       @_context
+    
+    # Add user propertiy  
+    service.addUserProperty = (k, v)->   
+      @_context.userProperties.push [ k, v ]   
+    
     # Track a user interaction  
-    service.trackUserInteraction = (a, i)->   
-      @_context.userInteractions.push { action: a, item: i }  
+    service.trackUserInteraction = (action, item)->   
+      @_context.userInteractions = {
+        'action': action, 
+        'item': item 
+      }  
+
       # notify the action trough a GA event
       # https://developers.google.com/analytics/devguides/collection/analyticsjs/events?hl=it
-      $log.debug "Goingo to notify userInteraction to analytics!"
+      $log.debug "Going to notify userInteraction to analytics!"
       $window.ga? "send", "event", "userInteraction", action, item.id
       true
 
     # Rewrite origin means append the context to the origin
     # The oupput is a new container reference
     service.rewriteOrigin = (origin, observers)->
-      newUrl = ""
-      chunks = []
-      if "contentId" in observers
-        chunks.push "contentId=#{@_context.lastInteractionItemId()}"
-      if chunks.length > 0
-        newUrl = "---#{chunks.join('')}.json"
-      else
-        newUrl = ".json"
       
-      origin.replace ".json", newUrl
+      chunks = []
+      # if react to user properties ...
+      if "userProperties" in observers
+        for property in @_context.userProperties
+          chunks.push property.join('=')
+      # if react to user interaction ...
+      if "userInteractions" in observers and @_context.userInteractions.item      
+        chunks.push [ "contentId", @_context.userInteractions.item.id ].join('=')
+      
+      if chunks.length > 0
+        # TODO Adapt to a real querystring
+        origin = origin.replace ".json", "---#{chunks.join('&')}.json"
+        return origin
+      
+      origin
       
     # Reset the context    
     service.resetContext = ()->
@@ -194,7 +194,7 @@ angular.module("wordlift.containers.engine", [])
       restrict: "E"
       scope:
         uri: "@"
-        observe: "@"
+        listening: "@"
         stack: "="
       controller: ($scope, $element, $attrs) ->
         ctrl = 
@@ -209,8 +209,8 @@ angular.module("wordlift.containers.engine", [])
 
         # Notify itself to the controller 
         observers = []
-        if scope.observe
-          observers = scope.observe.split(',')
+        if scope.listening
+          observers = scope.listening.split(',')
 
         scope.$emit "containerAdded", scope.uri, observers
 

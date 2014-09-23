@@ -13,6 +13,7 @@
 <script src="../bower_components/underscore/underscore.js"></script>
 <script src="../bower_components/famous/famous-global.js"></script>
 <script src="../bower_components/famous-angular/dist/famous-angular.js"></script>
+<script src="../bower_components/angularjs-geolocation/dist/angularjs-geolocation.min.js"></script>
 
 <script src="js/wordlift-containers.js"></script>
 <link href="css/wordlift.containers.css" rel="stylesheet" type="text/css">
@@ -58,42 +59,46 @@ window.containers['data/Video.json'] = {
 
     </div>
     <div class="large-5 columns">
-    	    <div class="row panel">
+    <div class="row panel">
       <h3>Debug Panel</h3>
-
-      <h5>Context modifier</h5>
-      <form ng-submit="submit()">
-        <input type="text" ng-model="contextProperty" placeholder="Context property"/>
-        <input type="text" ng-model="contextPropertyValue" placeholder="Context property value"/>
-        <input type="submit" value="update context" class="button small round"/>
-        <input type="button" ng-click="reset()" value="reset context" class="button small round alert" />
-      </form>    
+ 
       <h5>Stack inspector</h5>
- 		<table>
- 		    <thead>
-    		<tr><th>Container Id</th><th>Current container origin</th></tr>
-  			</thead>
-  			<tbody>
-          		<tr ng-repeat="(k, v) in stack"><td>{{k}}</td><td>{{v}}</td></tr>
-			</tbody>
+    <table>
+        <thead>
+        <tr><th>Container Id</th><th>Current container origin</th></tr>
+        </thead>
+        <tbody>
+              <tr ng-repeat="(k, v) in stack"><td>{{k}}</td><td>{{v}}</td></tr>
+      </tbody>
         </table>
       <h5>Context inspector</h5>
- 		<table>
- 		    <thead>
-    		<tr><th>Context property name</th><th>Context property value</th></tr>
-  			</thead>
-  			<tbody>
-          		<tr ng-repeat="(k, v) in context"><td>{{k}}</td><td>{{v}}</td></tr>
-			</tbody>
-        </table>
+        <h6>User properties</h6>
+       <table>
+        <thead>
+        <tr><th>Property</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+              <tr ng-repeat="prop in context.userProperties"><td>{{prop[0]}}</td><td>{{prop[1]}}</td></tr>
+      </tbody>
+    </table>
+      <h6>User interactions</h6>
+     
+       <table>
+        <thead>
+        <tr><th>Action</th><th>Content Id</th></tr>
+        </thead>
+        <tbody>
+              <tr><td>{{context.userInteractions.action}}</td><td>{{context.userInteractions.item.id}}</td></tr>
+      </tbody>
+    </table>
      <h5>Observer inspector</h5>
- 		<table>
- 		    <thead>
-    		<tr><th>Container</th><th>Observers</th></tr>
-  			</thead>
-  			<tbody>
-          		<tr ng-repeat="(k, v) in observers"><td>{{k}}</td><td>{{v}}</td></tr>
-			</tbody>
+    <table>
+        <thead>
+        <tr><th>Container</th><th>Observers</th></tr>
+        </thead>
+        <tbody>
+              <tr ng-repeat="(k, v) in observers"><td>{{k}}</td><td>{{v}}</td></tr>
+      </tbody>
         </table>
     </div>
     </div>
