@@ -40,11 +40,20 @@ angular.module("wordlift.containers.engine", [])
     for uri, ctn of storage.containers
        $scope.stack[uri] = uri
 
+    # Reset the page stack
+    $scope.resetStack = ()->
+      for id, origin of $scope.stack  
+        $scope.stack[id] = id
+    
     # Everytime the context changes the stack need to be update accordingly
     $rootScope.$on "contextChanged", (event, property, value) ->
       if ContextManagerService.addProperty property, value
-        ContextManagerService.rewriteStack($scope.stack, $scope.observers)
-    
+        $log.info "Context updated! Let's update the page stack accordingly!"
+        for id, origin of $scope.stack    
+          newOrigin = ContextManagerService.rewriteOrigin id, $scope.observers[id]
+          $log.debug "From #{id} to #{newOrigin}"
+          $scope.stack[id] = newOrigin
+
     $rootScope.$on "containerAdded", (event, ctnOrigin, ctnObserver) ->
       $log.debug "Added ctn #{ctnOrigin} reactive to #{ctnObserver}"
       $scope.stack[ctnOrigin] = ctnOrigin
@@ -58,7 +67,7 @@ angular.module("wordlift.containers.engine", [])
     $scope.reset = () ->
       $log.debug "reset"
       ContextManagerService.resetContext()
-      ContextManagerService.resetStack $scope.stack
+      $scope.resetStack()
       $scope.contextProperty = undefined
       $scope.contextPropertyValue = undefined
 
@@ -89,34 +98,22 @@ angular.module("wordlift.containers.engine", [])
 
       @_context[property] = value
       true
-    # Returns the context as querystring fragment
-    # This output can be appended to containers origins, 
-    # meaning that the current context is applied to current containers
-    # Note: this implementazione is just for test pourpose
-    service.toString = (observers)->
+
+    # Rewrite origin means append the context to the origin
+    # The oupput is a new container reference
+    service.rewriteOrigin = (origin, observers)->
+      newUrl = ""
       chunks = []
       for property in @_allowedProperties
         if @_context[property] and (property in observers)
           chunks.push "#{property}=#{@_context[property]}"
       if chunks.length > 0
-        return "---#{chunks.join('')}.json"
+        newUrl = "---#{chunks.join('')}.json"
       else
-        return ".json"
-        
-    # Rewrite origin means append the context to the origin
-    # The oupput is a new container reference
-    service.rewriteOrigin = (origin, observers)->
-      origin.replace ".json", @toString(observers)
-    # Rewrite the whale page stack
-    service.rewriteStack = (stack, observers)->
-      for id, origin of stack    
-        stack[id] = @rewriteOrigin id, observers[id]
-      stack
-    # Reset the page stack
-    service.resetStack = (stack)->
-      for id, origin of stack  
-        stack[id] = id
-      stack
+        newUrl = ".json"
+      
+      origin.replace ".json", newUrl
+      
     # Reset the context    
     service.resetContext = ()->
       @_context = {}
@@ -162,7 +159,6 @@ angular.module("wordlift.containers.engine", [])
         return deferred.promise
       
       $log.info "Ctn stored for #{ctnOrigin}. Nothing to load here!"
-      $log.debug container
       # Otherwise returns the container itself wrapped in a promise-like obj
       # This trick allows wl-container to deal with this response with a single interface
       return {

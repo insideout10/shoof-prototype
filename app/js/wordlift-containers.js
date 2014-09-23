@@ -27,9 +27,29 @@
         ctn = _ref[uri];
         $scope.stack[uri] = uri;
       }
+      $scope.resetStack = function() {
+        var id, origin, _ref1, _results;
+        _ref1 = $scope.stack;
+        _results = [];
+        for (id in _ref1) {
+          origin = _ref1[id];
+          _results.push($scope.stack[id] = id);
+        }
+        return _results;
+      };
       $rootScope.$on("contextChanged", function(event, property, value) {
+        var id, newOrigin, origin, _ref1, _results;
         if (ContextManagerService.addProperty(property, value)) {
-          return ContextManagerService.rewriteStack($scope.stack, $scope.observers);
+          $log.info("Context updated! Let's update the page stack accordingly!");
+          _ref1 = $scope.stack;
+          _results = [];
+          for (id in _ref1) {
+            origin = _ref1[id];
+            newOrigin = ContextManagerService.rewriteOrigin(id, $scope.observers[id]);
+            $log.debug("From " + id + " to " + newOrigin);
+            _results.push($scope.stack[id] = newOrigin);
+          }
+          return _results;
         }
       });
       $rootScope.$on("containerAdded", function(event, ctnOrigin, ctnObserver) {
@@ -44,7 +64,7 @@
       return $scope.reset = function() {
         $log.debug("reset");
         ContextManagerService.resetContext();
-        ContextManagerService.resetStack($scope.stack);
+        $scope.resetStack();
         $scope.contextProperty = void 0;
         return $scope.contextPropertyValue = void 0;
       };
@@ -67,8 +87,9 @@
         this._context[property] = value;
         return true;
       };
-      service.toString = function(observers) {
-        var chunks, property, _i, _len, _ref;
+      service.rewriteOrigin = function(origin, observers) {
+        var chunks, newUrl, property, _i, _len, _ref;
+        newUrl = "";
         chunks = [];
         _ref = this._allowedProperties;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -78,29 +99,11 @@
           }
         }
         if (chunks.length > 0) {
-          return "---" + (chunks.join('')) + ".json";
+          newUrl = "---" + (chunks.join('')) + ".json";
         } else {
-          return ".json";
+          newUrl = ".json";
         }
-      };
-      service.rewriteOrigin = function(origin, observers) {
-        return origin.replace(".json", this.toString(observers));
-      };
-      service.rewriteStack = function(stack, observers) {
-        var id, origin;
-        for (id in stack) {
-          origin = stack[id];
-          stack[id] = this.rewriteOrigin(id, observers[id]);
-        }
-        return stack;
-      };
-      service.resetStack = function(stack) {
-        var id, origin;
-        for (id in stack) {
-          origin = stack[id];
-          stack[id] = id;
-        }
-        return stack;
+        return origin.replace(".json", newUrl);
       };
       service.resetContext = function() {
         return this._context = {};
@@ -135,7 +138,6 @@
           return deferred.promise;
         }
         $log.info("Ctn stored for " + ctnOrigin + ". Nothing to load here!");
-        $log.debug(container);
         return {
           then: function(callback) {
             return callback.call(this, container);
