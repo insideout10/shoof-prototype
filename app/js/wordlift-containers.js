@@ -194,6 +194,22 @@
     }
   ]);
 
+  angular.module("wordlift.ui.skins.famous", ["famous.angular", "ngRoute", "wordlift.containers.engine"]).directive("wlNews", [
+    "$log", function($log) {
+      return {
+        restrict: "E",
+        require: "^wlContainer",
+        scope: {
+          items: "="
+        },
+        template: "<fa-app style=\"height: 200px\">\n  <fa-surface fa-background-color=\"'red'\">Hello world</fa-surface>\n</fa-app>",
+        link: function(scope, element, attrs, ctrl) {
+          return scope.container = ctrl;
+        }
+      };
+    }
+  ]);
+
   angular.module("wordlift.ui.skins.foundation", ["wordlift.containers.engine"]).directive("wlNews", [
     "$log", function($log) {
       return {
@@ -227,22 +243,6 @@
     }
   ]);
 
-  angular.module("wordlift.ui.skins.famous", ["famous.angular", "ngRoute", "wordlift.containers.engine"]).directive("wlNews", [
-    "$log", function($log) {
-      return {
-        restrict: "E",
-        require: "^wlContainer",
-        scope: {
-          items: "="
-        },
-        template: "<fa-app style=\"height: 200px\">\n  <fa-surface fa-background-color=\"'red'\">Hello world</fa-surface>\n</fa-app>",
-        link: function(scope, element, attrs, ctrl) {
-          return scope.container = ctrl;
-        }
-      };
-    }
-  ]);
-
 }).call(this);
 
-//# sourceMappingURL=shoof-ui.js.map
+//# sourceMappingURL=wordlift-containers.js.map

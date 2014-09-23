@@ -246,6 +246,26 @@ angular.module("wordlift.containers.engine", [])
 
 
 # Sample skin directive for news
+angular.module("wordlift.ui.skins.famous", ["famous.angular", "ngRoute", "wordlift.containers.engine"])
+.directive "wlNews", [
+  "$log"
+  ($log) ->
+    return (
+      restrict: "E"
+      require: "^wlContainer"
+      scope:
+        items: "="
+      template: """
+        <fa-app style="height: 200px">
+          <fa-surface fa-background-color="'red'">Hello world</fa-surface>
+        </fa-app>
+      """
+      link: (scope, element, attrs, ctrl) ->
+        scope.container = ctrl
+
+    )
+]
+# Sample skin directive for news
 angular.module("wordlift.ui.skins.foundation", ["wordlift.containers.engine"])
 .directive "wlNews", [
   "$log"
@@ -293,25 +313,5 @@ angular.module("wordlift.ui.skins.foundation", ["wordlift.containers.engine"])
         scope.container = ctrl
         scope.trustSrc = (src) ->
           $sce.trustAsResourceUrl(src)
-    )
-]
-# Sample skin directive for news
-angular.module("wordlift.ui.skins.famous", ["famous.angular", "ngRoute", "wordlift.containers.engine"])
-.directive "wlNews", [
-  "$log"
-  ($log) ->
-    return (
-      restrict: "E"
-      require: "^wlContainer"
-      scope:
-        items: "="
-      template: """
-        <fa-app style="height: 200px">
-          <fa-surface fa-background-color="'red'">Hello world</fa-surface>
-        </fa-app>
-      """
-      link: (scope, element, attrs, ctrl) ->
-        scope.container = ctrl
-
     )
 ]

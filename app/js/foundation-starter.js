@@ -3,8 +3,8 @@
 
   $(document).ready(function() {
     var injector;
-    angular.module("shoof", ["wordlift.ui.skins.foundation"]);
-    return injector = angular.bootstrap(document, ["shoof"]);
+    angular.module("containerBasedApp", ["wordlift.ui.skins.foundation"]);
+    return injector = angular.bootstrap(document, ["containerBasedApp"]);
   });
 
 }).call(this);
