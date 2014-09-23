@@ -1,7 +1,7 @@
 (function() {
   var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  angular.module("wordlift.containers.engine", []).provider("storage", function() {
+  angular.module("wordlift.containers.engine", ["geolocation"]).provider("storage", function() {
     var containers;
     containers = void 0;
     return {
@@ -17,90 +17,100 @@
   }).config(function(storageProvider) {
     return storageProvider.setContainers(window.containers);
   }).controller("wlContainersEngineCtrl", [
-    "ContextManagerService", "DataRetrieverService", "$scope", "$rootScope", "$log", "storage", function(ContextManagerService, DataRetrieverService, $scope, $rootScope, $log, storage) {
+    "ContextManagerService", "DataRetrieverService", "$scope", "$rootScope", "$log", "storage", "geolocation", function(ContextManagerService, DataRetrieverService, $scope, $rootScope, $log, storage, geolocation) {
       var ctn, uri, _ref;
       $scope.stack = {};
       $scope.observers = {};
+      geolocation.getLocation().then(function(data) {
+        $log.info("User location detected: longitude " + data.coords.longitude + " latitude " + data.coords.latitude);
+        ContextManagerService.addUserProperty("lat", data.coords.latitude);
+        ContextManagerService.addUserProperty("lng", data.coords.longitude);
+        return $scope.updateStack();
+      });
       $scope.context = ContextManagerService.getContext();
       _ref = storage.containers;
       for (uri in _ref) {
         ctn = _ref[uri];
         $scope.stack[uri] = uri;
       }
-      $rootScope.$on("contextChanged", function(event, property, value) {
-        if (ContextManagerService.addProperty(property, value)) {
-          return ContextManagerService.rewriteStack($scope.stack, $scope.observers);
+      $scope.resetStack = function() {
+        var id, origin, _ref1, _results;
+        _ref1 = $scope.stack;
+        _results = [];
+        for (id in _ref1) {
+          origin = _ref1[id];
+          _results.push($scope.stack[id] = id);
         }
+        return _results;
+      };
+      $scope.updateStack = function() {
+        var id, newOrigin, origin, _ref1, _results;
+        $log.debug("updateStack");
+        _ref1 = $scope.stack;
+        _results = [];
+        for (id in _ref1) {
+          origin = _ref1[id];
+          newOrigin = ContextManagerService.rewriteOrigin(id, $scope.observers[id]);
+          $log.debug("From " + id + " to " + newOrigin);
+          _results.push($scope.stack[id] = newOrigin);
+        }
+        return _results;
+      };
+      $rootScope.$on("notifyUserInteraction", function(event, action, item) {
+        ContextManagerService.trackUserInteraction(action, item);
+        $log.info("Context updated! Let's update the page stack accordingly!");
+        return $scope.updateStack();
       });
-      $rootScope.$on("containerAdded", function(event, ctnOrigin, ctnObserver) {
+      return $rootScope.$on("containerAdded", function(event, ctnOrigin, ctnObserver) {
         $log.debug("Added ctn " + ctnOrigin + " reactive to " + ctnObserver);
         $scope.stack[ctnOrigin] = ctnOrigin;
         return $scope.observers[ctnOrigin] = ctnObserver;
       });
-      $scope.submit = function() {
-        $log.debug("submit");
-        return $rootScope.$broadcast("contextChanged", $scope.contextProperty, $scope.contextPropertyValue);
-      };
-      return $scope.reset = function() {
-        $log.debug("reset");
-        ContextManagerService.resetContext();
-        ContextManagerService.resetStack($scope.stack);
-        $scope.contextProperty = void 0;
-        return $scope.contextPropertyValue = void 0;
-      };
     }
   ]).service("ContextManagerService", [
-    "$log", function($log) {
+    "$log", "$window", function($log, $window) {
       var service;
       service = {
-        _context: {},
-        _allowedProperties: ['contentId', 'userId']
+        _context: {
+          userProperties: [],
+          userInteractions: {}
+        }
       };
       service.getContext = function() {
         return this._context;
       };
-      service.addProperty = function(property, value) {
-        if (__indexOf.call(this._allowedProperties, property) < 0) {
-          $log.warn("ContextManager does not allow property " + property);
-          return false;
+      service.addUserProperty = function(k, v) {
+        return this._context.userProperties.push([k, v]);
+      };
+      service.trackUserInteraction = function(action, item) {
+        this._context.userInteractions = {
+          'action': action,
+          'item': item
+        };
+        $log.debug("Going to notify userInteraction to analytics!");
+        if (typeof $window.ga === "function") {
+          $window.ga("send", "event", "userInteraction", action, item.id);
         }
-        this._context[property] = value;
         return true;
       };
-      service.toString = function(observers) {
+      service.rewriteOrigin = function(origin, observers) {
         var chunks, property, _i, _len, _ref;
         chunks = [];
-        _ref = this._allowedProperties;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          property = _ref[_i];
-          if (this._context[property] && (__indexOf.call(observers, property) >= 0)) {
-            chunks.push("" + property + "=" + this._context[property]);
+        if (__indexOf.call(observers, "userProperties") >= 0) {
+          _ref = this._context.userProperties;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            property = _ref[_i];
+            chunks.push(property.join('='));
           }
         }
+        if (__indexOf.call(observers, "userInteractions") >= 0 && this._context.userInteractions.item) {
+          chunks.push(["contentId", this._context.userInteractions.item.id].join('='));
+        }
         if (chunks.length > 0) {
-          return "---" + (chunks.join('')) + ".json";
-        } else {
-          return ".json";
+          origin = origin.replace(".json", "---" + (chunks.join('&')) + ".json");
+          return origin;
         }
-      };
-      service.rewriteOrigin = function(origin, observers) {
-        return origin.replace(".json", this.toString(observers));
-      };
-      service.rewriteStack = function(stack, observers) {
-        var id, origin;
-        for (id in stack) {
-          origin = stack[id];
-          stack[id] = this.rewriteOrigin(id, observers[id]);
-        }
-        return stack;
-      };
-      service.resetStack = function(stack) {
-        var id, origin;
-        for (id in stack) {
-          origin = stack[id];
-          stack[id] = id;
-        }
-        return stack;
+        return origin;
       };
       service.resetContext = function() {
         return this._context = {};
@@ -135,7 +145,6 @@
           return deferred.promise;
         }
         $log.info("Ctn stored for " + ctnOrigin + ". Nothing to load here!");
-        $log.debug(container);
         return {
           then: function(callback) {
             return callback.call(this, container);
@@ -150,7 +159,7 @@
         restrict: "E",
         scope: {
           uri: "@",
-          observe: "@",
+          listening: "@",
           stack: "="
         },
         controller: function($scope, $element, $attrs) {
@@ -158,7 +167,7 @@
           ctrl = {
             notifier: function(action, item) {
               $log.debug("" + action + "ing content " + item.id + "!");
-              return $scope.$emit("contextChanged", "contentId", item.id);
+              return $scope.$emit("notifyUserInteraction", action, item);
             }
           };
           return ctrl;
@@ -167,8 +176,8 @@
           var compiled, observers;
           compiled = false;
           observers = [];
-          if (scope.observe) {
-            observers = scope.observe.split(',');
+          if (scope.listening) {
+            observers = scope.listening.split(',');
           }
           scope.$emit("containerAdded", scope.uri, observers);
           return scope.$watch('stack', function(newStack, oldStack) {
