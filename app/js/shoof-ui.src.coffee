@@ -1,6 +1,22 @@
 # Test mock prototype
 app = angular.module("shoof.ui", ["famous.angular", "ngRoute"])
 
+app.provider("storage", () ->
+  containers = undefined
+  return {
+    setContainers: (cnts) ->
+      containers = cnts
+    $get: () ->
+      return {
+          containers: containers
+      }
+  }
+)
+
+app.config((storageProvider) ->
+  storageProvider.setContainers window.containers
+)
+
 # UiCtrl manage communications between skins, context and data retriever
 app.controller "ShoofCtrl", [
   "ContextManagerService"
@@ -8,13 +24,17 @@ app.controller "ShoofCtrl", [
   "$scope"
   "$rootScope"
   "$log"
-  (ContextManagerService, DataRetrieverService, $scope, $rootScope, $log) ->
+  "storage"
+  (ContextManagerService, DataRetrieverService, $scope, $rootScope, $log, storage) ->
     
     $scope.stack = {}    
     $scope.observers = {}    
     
     $scope.context = ContextManagerService.getContext()
     
+    for uri, ctn of storage.containers
+       $scope.stack[uri] = uri
+
     # Everytime the context changes the stack need to be update accordingly
     $rootScope.$on "contextChanged", (event, property, value) ->
       if ContextManagerService.addProperty property, value
@@ -24,14 +44,6 @@ app.controller "ShoofCtrl", [
       $log.debug "Added ctn #{ctnOrigin} reactive to #{ctnObserver}"
       $scope.stack[ctnOrigin] = ctnOrigin
       $scope.observers[ctnOrigin] = ctnObserver
-      
-    # Once in page containers are properly loaded
-    # the controller it's notified and stack is updated
-    $rootScope.$on "containerLoaded", (event, ctnOrigin) ->
-      $log.debug "Notified about ctn #{ctnOrigin} loading"
-      $scope.stack[ctnOrigin] = ctnOrigin
-      # TODO Investigate about: it seems to berequired an explicit $digist() execution here 
-      $scope.$digest()
 
     # Test fn
     $scope.submit = () ->
@@ -116,32 +128,24 @@ app.service "DataRetrieverService", [
   "$log",
   "$rootScope",
   "$q"
-  ($http, $log, $rootScope, $q) ->
+  "storage"
+  ($http, $log, $rootScope, $q, storage) ->
     
     service = 
-      _containers: {} 
+      _containers: storage.containers
     
-    service.setInPageContainers = (containers) ->
-      @_containers = containers
-      # Loops on containers and notify them to the controller
-      for origin of @_containers
-        $log.debug "Going to notify ctn #{origin} was loaded!"
-        $rootScope.$broadcast "containerLoaded", origin
-
-    # retrieve data for a container with uri ctnOrigin
-    # if it's presente in containers local storage @_containers return it
-    # Otherwise try to retrieve by $http
     service.loadContainer = (ctnOrigin) ->
+      storage = @_containers
       # If ctnOrigin is undefined nothing to do
       unless ctnOrigin
         $log.warn "Undefined origin: I cannot load any container!"
         return 
 
-      container = @_containers[ctnOrigin]
+      container = storage[ctnOrigin]
       
       # If container is not in local storage load it remotely and return the $http promise
       unless container
-        $log.warn "Ctn missing for #{ctnOrigin}. Try to load if from remote uri"
+        $log.info "Ctn missing for #{ctnOrigin}. Try to load if from remote uri"
       
         deferred = $q.defer()
         $http
@@ -149,15 +153,18 @@ app.service "DataRetrieverService", [
           url: ctnOrigin
           responseType: 'json'
         .success (ctn) ->
-          # @_containers[ctnOrigin] = ctn
+          storage[ctnOrigin] = ctn
           deferred.resolve ctn
         
         return deferred.promise
+      
+      $log.info "Ctn stored for #{ctnOrigin}. Nothing to load here!"
+      $log.debug container
       # Otherwise returns the container itself wrapped in a promise-like obj
       # This trick allows wl-container to deal with this response with a single interface
       return {
         then: (callback) ->
-          callback.call container
+          callback.call(@, container)
         }
     
     # loop containers and find container with type = containerType
@@ -223,7 +230,7 @@ app.directive "wlContainer", [
               <wl-#{scope.container.skin} items="container.items"></wl-#{scope.container.skin}">
             </div>"""
 
-            # TODO Try to find a smarter wat to redraw the container
+            # TODO Try to find a smarter way to redraw the container
             element.html(template).show()
             $compile(element.contents()) scope
             compiled = true
@@ -233,13 +240,11 @@ app.directive "wlContainer", [
 ]
 
 # Define window.containers: it's the storage for in-page loaded containers
-window.containers = {}
+#window.containers = {}
 # Once the page is loaded, angula app is bootstraped
 $( document ).ready ()->
   injector = angular.bootstrap(document, ["shoof.ui"])
-  injector.invoke(['DataRetrieverService', (DataRetrieverService) ->
-    DataRetrieverService.setInPageContainers window.containers
-  ])
+
 
 
 
@@ -293,4 +298,3 @@ app.directive "wlVideo", [
           $sce.trustAsResourceUrl(src)
     )
 ]
-console.log 'ciao raga'

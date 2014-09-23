@@ -4,11 +4,36 @@
 
   app = angular.module("shoof.ui", ["famous.angular", "ngRoute"]);
 
+  app.provider("storage", function() {
+    var containers;
+    containers = void 0;
+    return {
+      setContainers: function(cnts) {
+        return containers = cnts;
+      },
+      $get: function() {
+        return {
+          containers: containers
+        };
+      }
+    };
+  });
+
+  app.config(function(storageProvider) {
+    return storageProvider.setContainers(window.containers);
+  });
+
   app.controller("ShoofCtrl", [
-    "ContextManagerService", "DataRetrieverService", "$scope", "$rootScope", "$log", function(ContextManagerService, DataRetrieverService, $scope, $rootScope, $log) {
+    "ContextManagerService", "DataRetrieverService", "$scope", "$rootScope", "$log", "storage", function(ContextManagerService, DataRetrieverService, $scope, $rootScope, $log, storage) {
+      var ctn, uri, _ref;
       $scope.stack = {};
       $scope.observers = {};
       $scope.context = ContextManagerService.getContext();
+      _ref = storage.containers;
+      for (uri in _ref) {
+        ctn = _ref[uri];
+        $scope.stack[uri] = uri;
+      }
       $rootScope.$on("contextChanged", function(event, property, value) {
         if (ContextManagerService.addProperty(property, value)) {
           return ContextManagerService.rewriteStack($scope.stack, $scope.observers);
@@ -18,11 +43,6 @@
         $log.debug("Added ctn " + ctnOrigin + " reactive to " + ctnObserver);
         $scope.stack[ctnOrigin] = ctnOrigin;
         return $scope.observers[ctnOrigin] = ctnObserver;
-      });
-      $rootScope.$on("containerLoaded", function(event, ctnOrigin) {
-        $log.debug("Notified about ctn " + ctnOrigin + " loading");
-        $scope.stack[ctnOrigin] = ctnOrigin;
-        return $scope.$digest();
       });
       $scope.submit = function() {
         $log.debug("submit");
@@ -99,43 +119,37 @@
   ]);
 
   app.service("DataRetrieverService", [
-    "$http", "$log", "$rootScope", "$q", function($http, $log, $rootScope, $q) {
+    "$http", "$log", "$rootScope", "$q", "storage", function($http, $log, $rootScope, $q, storage) {
       var service;
       service = {
-        _containers: {}
-      };
-      service.setInPageContainers = function(containers) {
-        var origin, _results;
-        this._containers = containers;
-        _results = [];
-        for (origin in this._containers) {
-          $log.debug("Going to notify ctn " + origin + " was loaded!");
-          _results.push($rootScope.$broadcast("containerLoaded", origin));
-        }
-        return _results;
+        _containers: storage.containers
       };
       service.loadContainer = function(ctnOrigin) {
         var container, deferred;
+        storage = this._containers;
         if (!ctnOrigin) {
           $log.warn("Undefined origin: I cannot load any container!");
           return;
         }
-        container = this._containers[ctnOrigin];
+        container = storage[ctnOrigin];
         if (!container) {
-          $log.warn("Ctn missing for " + ctnOrigin + ". Try to load if from remote uri");
+          $log.info("Ctn missing for " + ctnOrigin + ". Try to load if from remote uri");
           deferred = $q.defer();
           $http({
             method: 'GET',
             url: ctnOrigin,
             responseType: 'json'
           }).success(function(ctn) {
+            storage[ctnOrigin] = ctn;
             return deferred.resolve(ctn);
           });
           return deferred.promise;
         }
+        $log.info("Ctn stored for " + ctnOrigin + ". Nothing to load here!");
+        $log.debug(container);
         return {
           then: function(callback) {
-            return callback.call(container);
+            return callback.call(this, container);
           }
         };
       };
@@ -193,16 +207,9 @@
     }
   ]);
 
-  window.containers = {};
-
   $(document).ready(function() {
     var injector;
-    injector = angular.bootstrap(document, ["shoof.ui"]);
-    return injector.invoke([
-      'DataRetrieverService', function(DataRetrieverService) {
-        return DataRetrieverService.setInPageContainers(window.containers);
-      }
-    ]);
+    return injector = angular.bootstrap(document, ["shoof.ui"]);
   });
 
   app.directive("wlNews", [
@@ -239,8 +246,6 @@
       };
     }
   ]);
-
-  console.log('ciao raga');
 
 }).call(this);
 

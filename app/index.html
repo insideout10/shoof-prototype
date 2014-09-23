@@ -13,7 +13,6 @@
 <script src="../bower_components/famous/famous-global.js"></script>
 <script src="../bower_components/famous-angular/dist/famous-angular.js"></script>
 
-<script src="js/shoof-ui.js"></script>
 <link href="css/shoof.ui.css" rel="stylesheet" type="text/css">
   <meta charset="utf-8">
   <title>Mico SC-02 frontend prototype</title>
@@ -32,6 +31,7 @@
     <div class="large-7 columns">
   		<wl-container uri="data/Video.json" stack="stack" observe="contentId,userId"></wl-container>
     <script type="text/javascript">
+     window.containers = {};
 window.containers['data/Video.json'] = {
   "ctn": "Video",
   "origin": "/data/Video.json",
@@ -99,6 +99,7 @@ window.containers['data/Video.json'] = {
 
 
 
-   
+ <script src="js/shoof-ui.js"></script>
+  
 </body>
 </html>
