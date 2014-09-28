@@ -1,29 +1,37 @@
 module.exports = function(grunt) {
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
-		
-      	coffee: {
-      		compile: {
-        		options: {
-          			join: true,
-          			sourceMap: true
-      			},
-        		files: {
-          			'app/js/wordlift-containers.js': [
-            			'src/coffee/app.wordlift.containers.engine.coffee',
-            			'src/coffee/app.wordlift.ui.skins.famous.coffee',
-            			'src/coffee/app.wordlift.ui.skins.foundation.coffee'
-          			],
-          			'app/js/foundation-starter.js': [
-            			'src/coffee/starters/foundation.coffee'
-          			],
-          			'app/js/famous-starter.js': [
-            			'src/coffee/starters/famous.coffee'
-          			]
- 
-          		}
-          	}
-        },
+      coffee: {
+      	compile: {
+        	options: {
+          	join: true,
+          	sourceMap: true
+      		},
+        	files: {
+          	'app/js/wordlift-containers.js': [
+              'src/coffee/app.wordlift.containers.engine.coffee',
+            	'src/coffee/app.wordlift.ui.skins.famous.coffee',
+            	'src/coffee/app.wordlift.ui.skins.foundation.coffee'
+          	],
+          	'app/js/foundation-starter.js': [
+            	'src/coffee/starters/foundation.coffee'
+          	],
+          	'app/js/famous-starter.js': [
+            	'src/coffee/starters/famous.coffee'
+          	],
+          }
+        }
+      },
+    copy : {
+      dist: {
+        files: [
+          { src: 'app/js/wordlift-containers.js', dest: 'src/php/js/wordlift-containers.js'},
+          { src: 'app/js/foundation-starter.js', dest: 'src/php/js/foundation-starter.js'},
+          { src: 'app/js/famous-starter.js', dest: 'src/php/js/famous-starter.js'},          
+          { src: 'app/css/wordlift-containers.css', dest: 'src/php/css/wordlift-containers.css'}
+        ]
+      }
+    },
 		compass: {
 			dist: {
 				options: {
@@ -32,29 +40,19 @@ module.exports = function(grunt) {
 				},
 			}
 		},
-		cssmin: {
-  			minify: {
-    			src: 'src/scss/wordlift-containers.scss',
-   				dest: 'app/css/wordlift-containers.min.css'
-  			}
-		},
 		watch: {
 			compass: {
-				files: ['**/*.{scss}'],
-       			tasks: ['compass:dev']
-			},
-			css: {
-				files: 'src/scss/*.scss',
-				tasks: ['compass']
+				files: ['src/scss/*.scss'],
+       	tasks: ['compass']
 			},
 			coffee: {
     			files: ['src/coffee/*.coffee'],
     			tasks: 'coffee'
-  			},
-  			cssmin: {
-  				files: ['app/css/wordlift-containers.css'],
-  				tasks: ['cssmin']
-			}
+  		},
+      copy: {
+        files: ['app/js/*.js', 'app/css/*.css'],
+        tasks: ['copy']
+      }
 		}
 	});
 
@@ -62,6 +60,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-compass');
 	grunt.loadNpmTasks('grunt-contrib-watch');
 	grunt.loadNpmTasks('grunt-contrib-cssmin');
+  grunt.loadNpmTasks('grunt-contrib-copy');
 
-	grunt.registerTask('default',['cssmin','coffee','watch']);
+	grunt.registerTask('default',['compass', 'coffee','copy', 'watch']);
 }

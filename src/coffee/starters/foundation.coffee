@@ -6,5 +6,6 @@ $( document ).ready ()->
   $('body').attr "ng-controller", "wlContainersEngineCtrl"
   # Create the angular app
   angular.module("containerBasedApp",["wordlift.ui.skins.foundation"])
-  # and perform angular app bootstrap
+  # and finally perform angular app bootstrap
+  
   injector = angular.bootstrap(document, ["containerBasedApp"])

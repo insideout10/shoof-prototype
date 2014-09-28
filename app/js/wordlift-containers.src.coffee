@@ -1,6 +1,6 @@
 
 # Define the Wordlift Containers Engine
-# Here is the core logic for containers rendering
+# Here is the core logic for containers rendering engine.
 # Skins are managed as separated modules
 angular.module("wordlift.containers.engine", ["geolocation"])
 
@@ -54,10 +54,8 @@ angular.module("wordlift.containers.engine", ["geolocation"])
         $scope.stack[id] = id
     # Update the page stack
     $scope.updateStack = ()->
-      $log.debug "updateStack"
       for id, origin of $scope.stack    
         newOrigin = ContextManagerService.rewriteOrigin id, $scope.observers[id]
-        $log.debug "From #{id} to #{newOrigin}"
         $scope.stack[id] = newOrigin
 
     # Everytime the context changes the stack need to be update accordingly
