@@ -6,13 +6,17 @@ function wlc_shortcode_container( $atts ) {
 
     // Extract attributes and set default values
     $container_atts = shortcode_atts( array(
-        'url'      => 'http://foo.io',
+        'url'      => '',
+        'listening' => ''
     ), $atts );
     // Escaping atts.
     $esc_url = esc_attr( $container_atts['url'] );
+    $esc_listening = esc_attr( $container_atts['listening'] );
+    
     // Return container code
 	return <<<EOF
-	<wl-container uri="$esc_url" stack="stack"><wl-container>
+	<wl-container uri="$esc_url" stack="stack" listening="$esc_listening">
+	</wl-container>
 EOF;
 }
 /**
