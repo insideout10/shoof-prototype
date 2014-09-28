@@ -35,4 +35,8 @@ function wlc_include_frontend_scripts() {
 }
 
 add_action( 'wp_enqueue_scripts', 'wlc_include_frontend_scripts' );
+
+// Shortcodes
+require_once('shortcodes/wlc_shortcode_container.php');
+
 ?>
