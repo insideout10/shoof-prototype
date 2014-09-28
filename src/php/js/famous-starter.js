@@ -1,4 +1,8 @@
 (function() {
+  var $;
+
+  $ = jQuery;
+
   window.containers = {};
 
   $(document).ready(function() {

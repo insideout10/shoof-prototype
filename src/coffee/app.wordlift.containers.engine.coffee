@@ -1,6 +1,6 @@
 
 # Define the Wordlift Containers Engine
-# Here is the core logic for containers rendering engine.
+# Here is the core logic for containers rendering engine
 # Skins are managed as separated modules
 angular.module("wordlift.containers.engine", ["geolocation"])
 

@@ -25,10 +25,8 @@ module.exports = function(grunt) {
     copy : {
       dist: {
         files: [
-          { src: 'app/js/wordlift-containers.js', dest: 'src/php/js/wordlift-containers.js'},
-          { src: 'app/js/foundation-starter.js', dest: 'src/php/js/foundation-starter.js'},
-          { src: 'app/js/famous-starter.js', dest: 'src/php/js/famous-starter.js'},          
-          { src: 'app/css/wordlift-containers.css', dest: 'src/php/css/wordlift-containers.css'}
+          { expand: true, cwd: 'app/js/', src: '*.js*', dest: 'src/php/js/', flatten: true },
+          { expand: true, cwd: 'app/css/', src: '*.css', dest: 'src/php/css/', flatten: true }
         ]
       }
     },
@@ -46,7 +44,7 @@ module.exports = function(grunt) {
        	tasks: ['compass']
 			},
 			coffee: {
-    			files: ['src/coffee/*.coffee'],
+    			files: ['src/coffee/**'],
     			tasks: 'coffee'
   		},
       copy: {
@@ -59,8 +57,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-coffee');
 	grunt.loadNpmTasks('grunt-contrib-compass');
 	grunt.loadNpmTasks('grunt-contrib-watch');
-	grunt.loadNpmTasks('grunt-contrib-cssmin');
-  grunt.loadNpmTasks('grunt-contrib-copy');
+	grunt.loadNpmTasks('grunt-contrib-copy');
 
 	grunt.registerTask('default',['compass', 'coffee','copy', 'watch']);
 }
