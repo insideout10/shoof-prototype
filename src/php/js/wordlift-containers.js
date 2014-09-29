@@ -225,7 +225,7 @@
         scope: {
           items: "="
         },
-        template: "<ul class=\"small-block-grid-2 large-block-grid-2\">\n  <li ng-repeat=\"item in items\">\n    <img ng-src=\"{{item.meta.thumb}}\" ng-mouseover=\"container.notifier('read', item)\" />\n    <h5>{{item.title}}</h5>\n    <p>\n    {{item.content}}<br />[ <a ng-href=\"{{item.content}}\">More Info</a> ]\n    </p>\n  </li>\n</ul>",
+        template: "<ul class=\"small-block-grid-2 large-block-grid-2\">\n  <li ng-repeat=\"item in items\">\n    <img ng-src=\"{{item.thumbnail}}\" ng-mouseover=\"container.notifier('read', item)\" />\n    <h5>{{item.title}}</h5>\n    <p>\n    {{item.content}}<br />[ <a ng-href=\"{{item.uri}}\">More Info</a> ]\n    </p>\n  </li>\n</ul>",
         link: function(scope, element, attrs, ctrl) {
           return scope.container = ctrl;
         }

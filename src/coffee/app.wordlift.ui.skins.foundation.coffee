@@ -11,10 +11,10 @@ angular.module("wordlift.ui.skins.foundation", ["wordlift.containers.engine"])
       template: """
         <ul class="small-block-grid-2 large-block-grid-2">
           <li ng-repeat="item in items">
-            <img ng-src="{{item.meta.thumb}}" ng-mouseover="container.notifier('read', item)" />
+            <img ng-src="{{item.thumbnail}}" ng-mouseover="container.notifier('read', item)" />
             <h5>{{item.title}}</h5>
             <p>
-            {{item.content}}<br />[ <a ng-href="{{item.content}}">More Info</a> ]
+            {{item.content}}<br />[ <a ng-href="{{item.uri}}">More Info</a> ]
             </p>
           </li>
         </ul>
