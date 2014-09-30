@@ -38,7 +38,6 @@ function wlc_render_container()
 {
 	
     ob_clean();
-    header( "Content-Type: application/json" );
     
     // Use limit or set 10 as default
     $limit = ( isset($_GET["limit"]) ) ? $_GET["limit"] : 10;
@@ -85,8 +84,15 @@ function wlc_render_container()
     	);
 
     $output = json_encode( $output );
+    if ( isset($_GET["callback"]))
+    {
+        header( "Content-Type: application/javascript" );
+        echo $_GET['callback'] . '(' . $output . ')';
+    } else {
+        header( "Content-Type: application/json" );
+        echo $output;
+    }
 
-    echo $output;
     wp_die();
 }
 

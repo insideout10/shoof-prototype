@@ -121,6 +121,21 @@
       service = {
         _containers: storage.containers
       };
+      service.prepareHttpRequest = function(ctnOrigin) {
+        var config;
+        config = {
+          url: ctnOrigin,
+          method: 'GET'
+        };
+        if (/^(http|https):\/\//.test(ctnOrigin)) {
+          config.method = 'JSONP';
+          config.params = {
+            callback: "JSON_CALLBACK"
+          };
+        }
+        $log.info("Going to request " + ctnOrigin + " with method " + config.method);
+        return config;
+      };
       service.loadContainer = function(ctnOrigin) {
         var container, deferred;
         storage = this._containers;
@@ -132,11 +147,7 @@
         if (!container) {
           $log.info("Ctn missing for " + ctnOrigin + ". Try to load if from remote uri");
           deferred = $q.defer();
-          $http({
-            method: 'GET',
-            url: ctnOrigin,
-            responseType: 'json'
-          }).success(function(ctn) {
+          $http(this.prepareHttpRequest(ctnOrigin)).success(function(ctn) {
             storage[ctnOrigin] = ctn;
             return deferred.resolve(ctn);
           });

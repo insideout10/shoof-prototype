@@ -145,6 +145,19 @@ angular.module("wordlift.containers.engine", ["geolocation"])
     service = 
       _containers: storage.containers
     
+    service.prepareHttpRequest = (ctnOrigin)->
+      config = 
+        url: ctnOrigin
+        method: 'GET'
+        #responseType: 'json'
+
+      if /^(http|https):\/\//.test ctnOrigin
+        config.method = 'JSONP'
+        config.params = { callback: "JSON_CALLBACK" }
+
+      $log.info "Going to request #{ctnOrigin} with method #{config.method}"
+      return config
+
     service.loadContainer = (ctnOrigin) ->
       storage = @_containers
       # If ctnOrigin is undefined nothing to do
@@ -159,10 +172,7 @@ angular.module("wordlift.containers.engine", ["geolocation"])
         $log.info "Ctn missing for #{ctnOrigin}. Try to load if from remote uri"
       
         deferred = $q.defer()
-        $http
-          method: 'GET' 
-          url: ctnOrigin
-          responseType: 'json'
+        $http( @prepareHttpRequest(ctnOrigin) )
         .success (ctn) ->
           storage[ctnOrigin] = ctn
           deferred.resolve ctn
