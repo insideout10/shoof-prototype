@@ -6,7 +6,7 @@ Description: M.I.C.O. test plugin
 Version: 1.0
 Author: Marcello Colacino
 Author URI: https://github.com/mcolacino
-License: GPL2
+License: APL
 */
 
 
