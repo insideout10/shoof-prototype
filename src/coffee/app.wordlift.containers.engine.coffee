@@ -244,10 +244,9 @@ angular.module("wordlift.containers.engine", ["geolocation"])
             scope.container = ctn
             
             template = """
-            <div class="row container-wrapper">
-              <p class="debug-box">Current container uri: <strong>#{currentOrigin}</strong></p>  
+              <!-- Current container uri: #{currentOrigin} -->  
               <wl-#{scope.container.skin} items="container.items"></wl-#{scope.container.skin}">
-            </div>"""
+            """
 
             # TODO Try to find a smarter way to redraw the container
             element.html(template).show()

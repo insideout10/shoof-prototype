@@ -201,7 +201,7 @@
             return promise.then(function(ctn) {
               var template;
               scope.container = ctn;
-              template = "<div class=\"row container-wrapper\">\n  <p class=\"debug-box\">Current container uri: <strong>" + currentOrigin + "</strong></p>  \n  <wl-" + scope.container.skin + " items=\"container.items\"></wl-" + scope.container.skin + "\">\n</div>";
+              template = "<!-- Current container uri: " + currentOrigin + " -->  \n<wl-" + scope.container.skin + " items=\"container.items\"></wl-" + scope.container.skin + "\">";
               element.html(template).show();
               $compile(element.contents())(scope);
               return compiled = true;
@@ -228,17 +228,70 @@
     }
   ]);
 
-  angular.module("wordlift.ui.skins.foundation", ["wordlift.containers.engine"]).directive("wlNews", [
+  angular.module("wordlift.ui.skins.foundation", ["wordlift.containers.engine"]).directive("wlTilesWithThumbsLoop", [
+    "$log", function($log) {
+      return {
+        restrict: "E",
+        scope: {
+          items: "="
+        },
+        template: "<div class=\"row\">\n  <ul class=\"small-block-grid-2 large-block-grid-4\">\n    <li ng-repeat=\"item in items\">\n      <wl-item item=\"item\"></wl-item>\n    </li>\n  </ul>\n</div>"
+      };
+    }
+  ]).directive("wlItem", [
     "$log", function($log) {
       return {
         restrict: "E",
         require: "^wlContainer",
         scope: {
-          items: "="
+          item: "="
         },
-        template: "<ul class=\"small-block-grid-2 large-block-grid-2\">\n  <li ng-repeat=\"item in items\">\n    <img ng-src=\"{{item.thumbnail}}\" ng-mouseover=\"container.notifier('read', item)\" />\n    <h5>{{item.title}}</h5>\n    <p>\n    {{item.content}}<br />[ <a ng-href=\"{{item.uri}}\">More Info</a> ]\n    </p>\n  </li>\n</ul>",
+        template: "<wl-thumb ng-mouseover=\"container.notifier('read', item)\"></wl-thumb>\n<wl-item-property name=\"title\" emphasis=\"title\"></wl-item-property>\n<wl-item-property name=\"content\" emphasis=\"paragraph\"></wl-item-property>\n<wl-link-to-item label=\"More info\" emphasis=\"paragraph\"></wl-link-to-item>",
         link: function(scope, element, attrs, ctrl) {
           return scope.container = ctrl;
+        }
+      };
+    }
+  ]).constant("emphasisLevels", {
+    'title': 'h5',
+    'paragraph': 'p'
+  }).directive("wlItemProperty", [
+    "$log", "emphasisLevels", function($log, emphasisLevels) {
+      return {
+        restrict: "E",
+        scope: false,
+        template: function(tElement, tAttrs) {
+          var tag;
+          tag = emphasisLevels[tAttrs.emphasis];
+          if (tag == null) {
+            tag = 'span';
+          }
+          return "<" + tag + " ng-show=\"item." + tAttrs.name + "\" class=\"item-" + tAttrs.name + "\">{{item." + tAttrs.name + "}}</" + tag + ">";
+        }
+      };
+    }
+  ]).directive("wlLinkToItem", [
+    "$log", "emphasisLevels", function($log, emphasisLevels) {
+      return {
+        restrict: "E",
+        scope: false,
+        template: function(tElement, tAttrs) {
+          var tag;
+          tag = emphasisLevels[tAttrs.emphasis];
+          if (tag == null) {
+            tag = 'span';
+          }
+          return "<" + tag + " ng-show=\"item.uri\" class=\"item-uri\"><a ng-href=\"{{item.uri}}\">" + tAttrs.label + "</a></" + tag + ">";
+        }
+      };
+    }
+  ]).directive("wlThumb", [
+    "$log", function($log) {
+      return {
+        restrict: "E",
+        scope: false,
+        template: function(tElement, tAttrs) {
+          return "<img ng-show=\"item.thumbnail\" class=\"item-thumbnail\" ng-src=\"{{item.thumbnail}}\" />";
         }
       };
     }

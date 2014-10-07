@@ -1,7 +1,7 @@
 {
 	"ctn": "News1",
 	"origin": "/data/News1.json",
-	"skin": "news",
+	"skin": "tiles-with-thumbs-loop",
 	"items": [
 		{
 			"id": 11,

@@ -244,10 +244,9 @@ angular.module("wordlift.containers.engine", ["geolocation"])
             scope.container = ctn
             
             template = """
-            <div class="row container-wrapper">
-              <p class="debug-box">Current container uri: <strong>#{currentOrigin}</strong></p>  
+              <!-- Current container uri: #{currentOrigin} -->  
               <wl-#{scope.container.skin} items="container.items"></wl-#{scope.container.skin}">
-            </div>"""
+            """
 
             # TODO Try to find a smarter way to redraw the container
             element.html(template).show()
@@ -284,30 +283,94 @@ angular.module("wordlift.ui.skins.famous", ["famous.angular", "ngRoute", "wordli
 ]
 # Sample skin directive for news
 angular.module("wordlift.ui.skins.foundation", ["wordlift.containers.engine"])
-.directive "wlNews", [
+.directive "wlTilesWithThumbsLoop", [
+  "$log"
+  ($log) ->
+    return (
+      restrict: "E"
+      scope: 
+        items: "="
+      template: """
+        <div class="row">
+          <ul class="small-block-grid-2 large-block-grid-4">
+            <li ng-repeat="item in items">
+              <wl-item item="item"></wl-item>
+            </li>
+          </ul>
+        </div>
+      """
+    )
+]
+.directive "wlItem", [
   "$log"
   ($log) ->
     return (
       restrict: "E"
       require: "^wlContainer"
-      scope:
-        items: "="
+      scope: 
+        item: "="
       template: """
-        <ul class="small-block-grid-2 large-block-grid-2">
-          <li ng-repeat="item in items">
-            <img ng-src="{{item.thumbnail}}" ng-mouseover="container.notifier('read', item)" />
-            <h5>{{item.title}}</h5>
-            <p>
-            {{item.content}}<br />[ <a ng-href="{{item.uri}}">More Info</a> ]
-            </p>
-          </li>
-        </ul>
+        <wl-thumb ng-mouseover="container.notifier('read', item)"></wl-thumb>
+        <wl-item-property name="title" emphasis="title"></wl-item-property>
+        <wl-item-property name="content" emphasis="paragraph"></wl-item-property>
+        <wl-link-to-item label="More info" emphasis="paragraph"></wl-link-to-item>
       """
       link: (scope, element, attrs, ctrl) ->
         scope.container = ctrl
 
     )
 ]
+.constant "emphasisLevels", {
+  'title': 'h5'
+  'paragraph': 'p'
+}
+.directive "wlItemProperty", [
+  "$log", 
+  "emphasisLevels",
+  ($log, emphasisLevels) ->
+    return (
+      restrict: "E"
+      scope: false
+      template: (tElement, tAttrs) ->
+        tag = emphasisLevels[tAttrs.emphasis]
+        unless tag?
+          tag = 'span'
+        """
+          <#{tag} ng-show="item.#{tAttrs.name}" class="item-#{tAttrs.name}">{{item.#{tAttrs.name}}}</#{tag}>
+        """
+    )
+]
+.directive "wlLinkToItem", [
+  "$log", 
+  "emphasisLevels",
+  ($log, emphasisLevels) ->
+    return (
+      restrict: "E"
+      scope: false
+      template: (tElement, tAttrs) ->
+        tag = emphasisLevels[tAttrs.emphasis]
+        unless tag?
+          tag = 'span'
+        """
+          <#{tag} ng-show="item.uri" class="item-uri"><a ng-href="{{item.uri}}">#{tAttrs.label}</a></#{tag}>
+        """
+    )
+]
+
+.directive "wlThumb", [
+  "$log", 
+  ($log) ->
+    return (
+      restrict: "E"
+      scope: false
+      template: (tElement, tAttrs) ->
+        """
+          <img ng-show="item.thumbnail" class="item-thumbnail" ng-src="{{item.thumbnail}}" />
+        """
+    )
+]
+
+
 # Skin directive for Video
 .directive "wlVideo", [
   "$sce"
