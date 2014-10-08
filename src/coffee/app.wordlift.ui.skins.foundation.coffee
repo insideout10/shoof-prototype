@@ -5,36 +5,51 @@ angular.module("wordlift.ui.skins.foundation", ["wordlift.containers.engine"])
   ($log) ->
     return (
       restrict: "E"
+      require: "^wlContainer"
       scope: 
         items: "="
       template: """
         <div class="row">
           <ul class="small-block-grid-2 large-block-grid-4">
             <li ng-repeat="item in items">
-              <wl-item item="item"></wl-item>
+              <wl-thumb ng-mouseover="notifier('read', item)"></wl-thumb>
+              <wl-tile></wl-tile>
             </li>
           </ul>
         </div>
       """
+      
+
+      link: (scope, element, attrs, ctrl) ->
+        $log.debug ctrl
+        scope.notifier = ctrl.notifier
+
     )
 ]
-.directive "wlItem", [
+.directive "wlTile", [
   "$log"
   ($log) ->
     return (
       restrict: "E"
-      require: "^wlContainer"
-      scope: 
-        item: "="
+      scope: false
       template: """
-        <wl-thumb ng-mouseover="container.notifier('read', item)"></wl-thumb>
         <wl-item-property name="title" emphasis="title"></wl-item-property>
         <wl-item-property name="content" emphasis="paragraph"></wl-item-property>
         <wl-link-to-item label="More info" emphasis="paragraph"></wl-link-to-item>
       """
-      link: (scope, element, attrs, ctrl) ->
-        scope.container = ctrl
+    )
+]
 
+.directive "wlThumb", [
+  "$log", 
+  ($log) ->
+    return (
+      restrict: "E"
+      scope: false
+      template: (tElement, tAttrs) ->
+        """
+          <img ng-show="item.thumbnail" class="item-thumbnail" ng-src="{{item.thumbnail}}" />
+        """
     )
 ]
 .constant "emphasisLevels", {
@@ -73,20 +88,6 @@ angular.module("wordlift.ui.skins.foundation", ["wordlift.containers.engine"])
         """
     )
 ]
-
-.directive "wlThumb", [
-  "$log", 
-  ($log) ->
-    return (
-      restrict: "E"
-      scope: false
-      template: (tElement, tAttrs) ->
-        """
-          <img ng-show="item.thumbnail" class="item-thumbnail" ng-src="{{item.thumbnail}}" />
-        """
-    )
-]
-
 
 # Skin directive for Video
 .directive "wlVideo", [

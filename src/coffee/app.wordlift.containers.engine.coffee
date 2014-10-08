@@ -211,6 +211,7 @@ angular.module("wordlift.containers.engine", ["geolocation"])
             # TODO replace this after ContextManager refactoring
             $scope.$emit "notifyUserInteraction", action, item 
         ctrl
+      
       link: (scope, element, attrs) ->
 
         compiled = false
@@ -245,7 +246,7 @@ angular.module("wordlift.containers.engine", ["geolocation"])
             
             template = """
               <!-- Current container uri: #{currentOrigin} -->  
-              <wl-#{scope.container.skin} items="container.items"></wl-#{scope.container.skin}">
+              <wl-#{scope.container.skin} items="container.items" notifier="notifier(action,item)"></wl-#{scope.container.skin}">
             """
 
             # TODO Try to find a smarter way to redraw the container

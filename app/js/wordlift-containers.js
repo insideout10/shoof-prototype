@@ -201,7 +201,7 @@
             return promise.then(function(ctn) {
               var template;
               scope.container = ctn;
-              template = "<!-- Current container uri: " + currentOrigin + " -->  \n<wl-" + scope.container.skin + " items=\"container.items\"></wl-" + scope.container.skin + "\">";
+              template = "<!-- Current container uri: " + currentOrigin + " -->  \n<wl-" + scope.container.skin + " items=\"container.items\" notifier=\"notifier(action,item)\"></wl-" + scope.container.skin + "\">";
               element.html(template).show();
               $compile(element.contents())(scope);
               return compiled = true;
@@ -232,23 +232,32 @@
     "$log", function($log) {
       return {
         restrict: "E",
+        require: "^wlContainer",
         scope: {
           items: "="
         },
-        template: "<div class=\"row\">\n  <ul class=\"small-block-grid-2 large-block-grid-4\">\n    <li ng-repeat=\"item in items\">\n      <wl-item item=\"item\"></wl-item>\n    </li>\n  </ul>\n</div>"
+        template: "<div class=\"row\">\n  <ul class=\"small-block-grid-2 large-block-grid-4\">\n    <li ng-repeat=\"item in items\">\n      <wl-thumb ng-mouseover=\"notifier('read', item)\"></wl-thumb>\n      <wl-tile></wl-tile>\n    </li>\n  </ul>\n</div>",
+        link: function(scope, element, attrs, ctrl) {
+          $log.debug(ctrl);
+          return scope.notifier = ctrl.notifier;
+        }
       };
     }
-  ]).directive("wlItem", [
+  ]).directive("wlTile", [
     "$log", function($log) {
       return {
         restrict: "E",
-        require: "^wlContainer",
-        scope: {
-          item: "="
-        },
-        template: "<wl-thumb ng-mouseover=\"container.notifier('read', item)\"></wl-thumb>\n<wl-item-property name=\"title\" emphasis=\"title\"></wl-item-property>\n<wl-item-property name=\"content\" emphasis=\"paragraph\"></wl-item-property>\n<wl-link-to-item label=\"More info\" emphasis=\"paragraph\"></wl-link-to-item>",
-        link: function(scope, element, attrs, ctrl) {
-          return scope.container = ctrl;
+        scope: false,
+        template: "<wl-item-property name=\"title\" emphasis=\"title\"></wl-item-property>\n<wl-item-property name=\"content\" emphasis=\"paragraph\"></wl-item-property>\n<wl-link-to-item label=\"More info\" emphasis=\"paragraph\"></wl-link-to-item>"
+      };
+    }
+  ]).directive("wlThumb", [
+    "$log", function($log) {
+      return {
+        restrict: "E",
+        scope: false,
+        template: function(tElement, tAttrs) {
+          return "<img ng-show=\"item.thumbnail\" class=\"item-thumbnail\" ng-src=\"{{item.thumbnail}}\" />";
         }
       };
     }
@@ -282,16 +291,6 @@
             tag = 'span';
           }
           return "<" + tag + " ng-show=\"item.uri\" class=\"item-uri\"><a ng-href=\"{{item.uri}}\">" + tAttrs.label + "</a></" + tag + ">";
-        }
-      };
-    }
-  ]).directive("wlThumb", [
-    "$log", function($log) {
-      return {
-        restrict: "E",
-        scope: false,
-        template: function(tElement, tAttrs) {
-          return "<img ng-show=\"item.thumbnail\" class=\"item-thumbnail\" ng-src=\"{{item.thumbnail}}\" />";
         }
       };
     }
