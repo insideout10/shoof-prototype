@@ -244,6 +244,7 @@ angular.module("wordlift.containers.engine", ["geolocation"])
           promise.then (ctn) ->
             scope.container = ctn
             
+            $log.debug "Going to render container #{currentOrigin} with skin #{scope.container.skin}"
             template = """
               <!-- Current container uri: #{currentOrigin} -->  
               <wl-#{scope.container.skin} items="container.items" notifier="notifier(action,item)"></wl-#{scope.container.skin}">

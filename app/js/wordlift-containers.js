@@ -201,6 +201,7 @@
             return promise.then(function(ctn) {
               var template;
               scope.container = ctn;
+              $log.debug("Going to render container " + currentOrigin + " with skin " + scope.container.skin);
               template = "<!-- Current container uri: " + currentOrigin + " -->  \n<wl-" + scope.container.skin + " items=\"container.items\" notifier=\"notifier(action,item)\"></wl-" + scope.container.skin + "\">";
               element.html(template).show();
               $compile(element.contents())(scope);
@@ -238,7 +239,20 @@
         },
         template: "<div class=\"row\">\n  <ul class=\"small-block-grid-2 large-block-grid-4\">\n    <li ng-repeat=\"item in items\">\n      <wl-thumb ng-mouseover=\"notifier('read', item)\"></wl-thumb>\n      <wl-tile></wl-tile>\n    </li>\n  </ul>\n</div>",
         link: function(scope, element, attrs, ctrl) {
-          $log.debug(ctrl);
+          return scope.notifier = ctrl.notifier;
+        }
+      };
+    }
+  ]).directive("wlHewaPlayersLoop", [
+    "$log", function($log) {
+      return {
+        restrict: "E",
+        require: "^wlContainer",
+        scope: {
+          items: "="
+        },
+        template: "<div class=\"row\" ng-repeat=\"item in items\">\n  <wl-hewa-player></wl-hewa-player>\n</div>",
+        link: function(scope, element, attrs, ctrl) {
           return scope.notifier = ctrl.notifier;
         }
       };
@@ -291,6 +305,30 @@
             tag = 'span';
           }
           return "<" + tag + " ng-show=\"item.uri\" class=\"item-uri\"><a ng-href=\"{{item.uri}}\">" + tAttrs.label + "</a></" + tag + ">";
+        }
+      };
+    }
+  ]).directive("wlHewaPlayer", [
+    "$log", function($log) {
+      var defaultProps, playerId;
+      playerId = 'hewa-player' + Math.floor((Math.random() * 999999999) + 1);
+      defaultProps = {
+        width: '100%',
+        androidhls: true,
+        aspectratio: '5:3',
+        autostart: true
+      };
+      return {
+        restrict: "E",
+        scope: false,
+        template: function($element, $attrs) {
+          return "<div id=\"" + playerId + "\"></div>";
+        },
+        link: function($scope, $element, $attrs) {
+          var player;
+          defaultProps['playlist'] = "data/hewa-id-" + $scope.item.id + ".rss";
+          player = jwplayer(playerId);
+          return player.setup(defaultProps);
         }
       };
     }

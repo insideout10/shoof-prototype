@@ -18,10 +18,25 @@ angular.module("wordlift.ui.skins.foundation", ["wordlift.containers.engine"])
           </ul>
         </div>
       """
-      
-
       link: (scope, element, attrs, ctrl) ->
-        $log.debug ctrl
+        scope.notifier = ctrl.notifier
+
+    )
+]
+.directive "wlHewaPlayersLoop", [
+  "$log"
+  ($log) ->
+    return (
+      restrict: "E"
+      require: "^wlContainer"
+      scope: 
+        items: "="
+      template: """
+        <div class="row" ng-repeat="item in items">
+          <wl-hewa-player></wl-hewa-player>
+        </div>
+      """
+      link: (scope, element, attrs, ctrl) ->
         scope.notifier = ctrl.notifier
 
     )
@@ -88,6 +103,35 @@ angular.module("wordlift.ui.skins.foundation", ["wordlift.containers.engine"])
         """
     )
 ]
+
+.directive "wlHewaPlayer", [
+  "$log", 
+  ($log) ->
+
+    playerId =  'hewa-player' + Math.floor((Math.random()*999999999)+1)
+    
+    defaultProps = 
+      width: '100%'
+      androidhls: true
+      aspectratio: '5:3'
+      autostart: true
+      
+    return (
+      restrict: "E"
+      scope: false
+      template: ($element, $attrs) ->
+        """
+          <div id="#{playerId}"></div>
+        """
+      link: ($scope, $element, $attrs) ->
+        # Hewa playlist url for the current item  
+        defaultProps['playlist'] = "data/hewa-id-#{$scope.item.id}.rss"     
+        player = jwplayer(playerId)
+        player.setup(defaultProps)
+    ) 
+]
+
+
 
 # Skin directive for Video
 .directive "wlVideo", [

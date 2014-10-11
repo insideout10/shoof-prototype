@@ -1,0 +1,12 @@
+<rss version="2.0" xmlns:jwplayer="http://rss.jwpcdn.com/">
+ <channel>
+  <item>
+   <title>InsideOut Today</title>
+   <jwplayer:image>http://test.helixware.tv/wp-content/uploads/2014/08/a118-w1200-s15.png</jwplayer:image>
+   <jwplayer:source file="http://test.helixware.tv/wp-admin/admin-ajax.php?action=hewa_smil&amp;id=118" label="Auto" type="rtmp" />
+   <jwplayer:source file="http://test.helixware.tv/wp-admin/admin-ajax.php?action=hewa_m3u8&amp;id=118" label="Auto" default="true" type="hls" />
+   <jwplayer:track file="https://totalerg-test.insideout.io/api/4/users/assets/118/vtt?w=95&amp;i=5" kind="thumbnails" />
+   <jwplayer:source file="http://totalerg-test.insideout.io/m3ugen/helixware/tests/helixware/1-insideout-today.mp4" label="480p" type="hls" />
+   <jwplayer:source file="http://totalerg-test.insideout.io/m3ugen/helixware/tests/helixware/2-insideout-today.mp4" label="640p" type="hls" />
+</item> </channel>
+</rss>
